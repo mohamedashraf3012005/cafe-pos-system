@@ -1,0 +1,109 @@
+﻿Analyzing cash_cafe...                                          
+
+  error - Target of URI hasn't been generated: 'package:cash_cafe/core/database/app_database.g.dart' - lib\core\database\app_database.dart:8:6 - uri_has_not_been_generated
+warning - The getter doesn't override an inherited getter - lib\core\database\app_database.dart:15:11 - override_on_non_overriding_member
+warning - The getter doesn't override an inherited getter - lib\core\database\app_database.dart:18:25 - override_on_non_overriding_member
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:31:13 - undefined_method
+  error - Undefined name 'systemTables' - lib\core\database\app_database.dart:31:18 - undefined_identifier
+  error - Undefined name 'SystemTablesCompanion' - lib\core\database\app_database.dart:31:39 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:35:29 - undefined_method
+  error - Undefined name 'categories' - lib\core\database\app_database.dart:35:34 - undefined_identifier
+  error - Undefined name 'CategoriesCompanion' - lib\core\database\app_database.dart:35:62 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:36:29 - undefined_method
+  error - Undefined name 'categories' - lib\core\database\app_database.dart:36:34 - undefined_identifier
+  error - Undefined name 'CategoriesCompanion' - lib\core\database\app_database.dart:36:62 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:37:30 - undefined_method
+  error - Undefined name 'categories' - lib\core\database\app_database.dart:37:35 - undefined_identifier
+  error - Undefined name 'CategoriesCompanion' - lib\core\database\app_database.dart:37:63 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:40:11 - undefined_method
+  error - Undefined name 'products' - lib\core\database\app_database.dart:40:16 - undefined_identifier
+  error - Undefined name 'ProductsCompanion' - lib\core\database\app_database.dart:40:33 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:41:11 - undefined_method
+  error - Undefined name 'products' - lib\core\database\app_database.dart:41:16 - undefined_identifier
+  error - Undefined name 'ProductsCompanion' - lib\core\database\app_database.dart:41:33 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:42:11 - undefined_method
+  error - Undefined name 'products' - lib\core\database\app_database.dart:42:16 - undefined_identifier
+  error - Undefined name 'ProductsCompanion' - lib\core\database\app_database.dart:42:33 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:43:11 - undefined_method
+  error - Undefined name 'products' - lib\core\database\app_database.dart:43:16 - undefined_identifier
+  error - Undefined name 'ProductsCompanion' - lib\core\database\app_database.dart:43:33 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:44:11 - undefined_method
+  error - Undefined name 'products' - lib\core\database\app_database.dart:44:16 - undefined_identifier
+  error - Undefined name 'ProductsCompanion' - lib\core\database\app_database.dart:44:33 - undefined_identifier
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\core\database\app_database.dart:45:11 - undefined_method
+  error - Undefined name 'products' - lib\core\database\app_database.dart:45:16 - undefined_identifier
+  error - Undefined name 'ProductsCompanion' - lib\core\database\app_database.dart:45:33 - undefined_identifier
+warning - Unused import: 'dart:typed_data' - lib\core\services\printer_service.dart:1:8 - unused_import
+warning - Unused import: 'package:http/http.dart' - lib\features\auth\presentation\cubit\auth_cubit.dart:2:8 - unused_import
+warning - Dead code - lib\features\auth\presentation\cubit\auth_cubit.dart:19:29 - dead_code
+  error - Target of URI doesn't exist: '../../main/presentation/pages/main_layout.dart' - lib\features\auth\presentation\pages\login_page.dart:6:8 - uri_does_not_exist
+  error - The name 'MainLayout' isn't a class - lib\features\auth\presentation\pages\login_page.dart:55:55 - creation_with_non_type
+  error - Target of URI doesn't exist: '../../main/presentation/pages/main_layout.dart' - lib\features\auth\presentation\pages\splash_page.dart:7:8 - uri_does_not_exist
+  error - The name 'MainLayout' isn't a class - lib\features\auth\presentation\pages\splash_page.dart:36:53 - creation_with_non_type
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\dashboard\presentation\pages\dashboard_page.dart:80:30 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../tables/presentation/pages/tables_page.dart' - lib\features\main\presentation\pages\main_layout.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../dashboard/presentation/pages/dashboard_page.dart' - lib\features\main\presentation\pages\main_layout.dart:8:8 - uri_does_not_exist
+  error - The name 'DashboardPage' isn't a class - lib\features\main\presentation\pages\main_layout.dart:21:11 - creation_with_non_type
+  error - The name 'TablesPage' isn't a class - lib\features\main\presentation\pages\main_layout.dart:22:11 - creation_with_non_type
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:14:36 - undefined_method
+  error - The getter 'products' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:14:46 - undefined_getter
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:29:27 - undefined_method
+  error - The getter 'orders' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:29:37 - undefined_getter
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:38:27 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:38:37 - undefined_getter
+  error - The getter 'products' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:39:20 - undefined_getter
+  error - The getter 'products' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:39:33 - undefined_getter
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:39:58 - undefined_getter
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:41:18 - undefined_getter
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:46:37 - undefined_getter
+  error - The getter 'products' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:47:40 - undefined_getter
+  error - The method 'transaction' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:68:15 - undefined_method
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:70:27 - undefined_method
+  error - The getter 'orders' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:70:37 - undefined_getter
+  error - The method 'update' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:78:19 - undefined_method
+  error - The getter 'systemTables' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:78:29 - undefined_getter
+  error - The name 'SystemTablesCompanion' isn't a class - lib\features\orders\data\repositories\order_repository_impl.dart:79:26 - creation_with_non_type
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:81:37 - undefined_method
+  error - The getter 'orders' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:81:45 - undefined_getter
+  error - Undefined name 'OrdersCompanion' - lib\features\orders\data\repositories\order_repository_impl.dart:82:15 - undefined_identifier
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:87:25 - undefined_method
+  error - The getter 'orders' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:87:35 - undefined_getter
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:92:28 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:92:38 - undefined_getter
+  error - The method 'update' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:101:19 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:101:29 - undefined_getter
+  error - The method 'OrderItemsCompanion' isn't defined for the type 'OrderRepositoryImpl' - lib\features\orders\data\repositories\order_repository_impl.dart:102:11 - undefined_method
+  error - The method 'into' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:109:18 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:109:26 - undefined_getter
+  error - Undefined name 'OrderItemsCompanion' - lib\features\orders\data\repositories\order_repository_impl.dart:110:15 - undefined_identifier
+  error - The method 'transaction' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:127:15 - undefined_method
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:128:30 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:128:40 - undefined_getter
+  error - The method 'update' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:133:19 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:133:29 - undefined_getter
+  error - The method 'OrderItemsCompanion' isn't defined for the type 'OrderRepositoryImpl' - lib\features\orders\data\repositories\order_repository_impl.dart:134:11 - undefined_method
+  error - The method 'transaction' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:146:16 - undefined_method
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:147:30 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:147:40 - undefined_getter
+  error - The method 'delete' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:148:17 - undefined_method
+  error - The getter 'orderItems' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:148:27 - undefined_getter
+  error - The method 'customSelect' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:154:37 - undefined_method
+  error - The method 'update' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:161:15 - undefined_method
+  error - The getter 'orders' isn't defined for the type 'AppDatabase' - lib\features\orders\data\repositories\order_repository_impl.dart:161:25 - undefined_getter
+  error - The method 'OrdersCompanion' isn't defined for the type 'OrderRepositoryImpl' - lib\features\orders\data\repositories\order_repository_impl.dart:162:7 - undefined_method
+  error - Target of URI doesn't exist: 'product_entity.dart' - lib\features\orders\domain\repositories\order_repository.dart:1:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'order_entity.dart' - lib\features\orders\domain\repositories\order_repository.dart:2:8 - uri_does_not_exist
+  error - The name 'ProductEntity' isn't a type, so it can't be used as a type argument - lib\features\orders\domain\repositories\order_repository.dart:5:15 - non_type_as_type_argument
+  error - The name 'OrderEntity' isn't a type, so it can't be used as a type argument - lib\features\orders\domain\repositories\order_repository.dart:6:10 - non_type_as_type_argument
+  error - Undefined class 'ProductEntity' - lib\features\orders\domain\repositories\order_repository.dart:7:44 - undefined_class
+warning - Unused import: '../../domain/entities/order_entity.dart' - lib\features\orders\presentation\pages\order_details_page.dart:5:8 - unused_import
+  error - The method 'select' isn't defined for the type 'AppDatabase' - lib\features\tables\data\repositories\table_repository_impl.dart:13:34 - undefined_method
+  error - The getter 'systemTables' isn't defined for the type 'AppDatabase' - lib\features\tables\data\repositories\table_repository_impl.dart:13:44 - undefined_getter
+  error - The method 'update' isn't defined for the type 'AppDatabase' - lib\features\tables\data\repositories\table_repository_impl.dart:23:15 - undefined_method
+  error - The getter 'systemTables' isn't defined for the type 'AppDatabase' - lib\features\tables\data\repositories\table_repository_impl.dart:23:25 - undefined_getter
+  error - The method 'SystemTablesCompanion' isn't defined for the type 'TableRepositoryImpl' - lib\features\tables\data\repositories\table_repository_impl.dart:24:16 - undefined_method
+   info - Don't use 'BuildContext's across async gaps - lib\features\tables\presentation\pages\tables_page.dart:56:28 - use_build_context_synchronously
+warning - Duplicate import - lib\injection_container.dart:4:8 - duplicate_import
+warning - Duplicate import - lib\injection_container.dart:5:8 - duplicate_import
+  error - The name 'MyApp' isn't a class - test\widget_test.dart:16:35 - creation_with_non_type
+
