@@ -1,15 +1,28 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'injection_container.dart' as di;
+import 'package:window_manager/window_manager.dart';
 import 'core/constants/app_colors.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
+import 'injection_container.dart' as di;
+
+/// Allows SSL network calls on Windows Desktop when behind local proxies/antivirus.
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Bypasses SSL certificate verification errors caused by Windows OS / Antivirus SSL inspection
+  HttpOverrides.global = MyHttpOverrides();
 
   // Initialize Desktop Window Manager (only on Desktop)
   if (!kIsWeb) {
@@ -28,7 +41,6 @@ void main() async {
       await windowManager.focus();
     });
   }
-
 
   // Inject dependencies
   await di.init();

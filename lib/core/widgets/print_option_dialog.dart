@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
 /// Result from the print option dialog.
@@ -38,7 +38,7 @@ class _PrintOptionDialogContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
+                  color: AppColors.primary.withAlpha(38),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.receipt_long,

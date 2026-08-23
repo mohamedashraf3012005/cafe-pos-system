@@ -200,6 +200,34 @@ class PrinterService {
                       ),
                     )),
 
+                // PlayStation item if present
+                if (order.playStationCost > 0)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.symmetric(vertical: 2.5),
+                    child: pw.Row(
+                      children: [
+                        pw.Expanded(
+                          flex: 5,
+                          child: pw.Text(order.playStationDescription ?? 'جلسة بلايستيشن',
+                              style: pw.TextStyle(font: baseFont, fontSize: 10)),
+                        ),
+                        pw.SizedBox(
+                          width: 30,
+                          child: pw.Text('1',
+                              style: pw.TextStyle(font: baseFont, fontSize: 10),
+                              textAlign: pw.TextAlign.center),
+                        ),
+                        pw.SizedBox(
+                          width: 50,
+                          child: pw.Text(
+                              order.playStationCost.toStringAsFixed(2),
+                              style: pw.TextStyle(font: baseFont, fontSize: 10),
+                              textAlign: pw.TextAlign.left),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 pw.SizedBox(height: 2),
                 _thickDivider(),
                 pw.SizedBox(height: 4),

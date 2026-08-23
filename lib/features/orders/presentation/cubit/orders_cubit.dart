@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/order_entity.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/order_repository.dart';
 import 'orders_state.dart';
@@ -78,6 +79,34 @@ class OrdersCubit extends Cubit<OrdersState> {
         emit(currentState.copyWith(activeOrder: updatedOrder));
       } catch (e) {
         emit(OrdersError(e.toString()));
+      }
+    }
+  }
+
+  void setPlayStationCost(double cost, String description, int? sessionId, {int? tableId, String orderType = 'dine_in'}) {
+    final s = state;
+    if (s is OrdersLoaded) {
+      if (s.activeOrder != null) {
+        emit(s.copyWith(
+          activeOrder: s.activeOrder!.copyWith(
+            playStationCost: cost,
+            playStationDescription: description,
+            playStationSessionId: sessionId,
+          ),
+        ));
+      } else {
+        // Customer ordered PlayStation only (no drinks yet)
+        final newOrder = OrderEntity(
+          id: 0,
+          tableId: tableId,
+          status: 'active',
+          orderType: orderType,
+          items: const [],
+          playStationCost: cost,
+          playStationDescription: description,
+          playStationSessionId: sessionId,
+        );
+        emit(s.copyWith(activeOrder: newOrder));
       }
     }
   }

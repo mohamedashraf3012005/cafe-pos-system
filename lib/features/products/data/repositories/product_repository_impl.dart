@@ -25,6 +25,8 @@ class ProductRepositoryImpl implements ProductRepository {
               price: p.price,
               categoryId: p.categoryId,
               hasAddons: p.hasAddons,
+              stockQuantity: p.stockQuantity,
+              minimumStock: p.minimumStock,
             ))
         .toList();
   }

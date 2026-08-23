@@ -46,6 +46,12 @@ dependencies:
   # Secure storage for sensitive data (role session)
   flutter_secure_storage: ^9.0.0
 
+  # Networking — calls secure backend for WhatsApp relay
+  http: ^1.2.0
+
+  # Connectivity — monitors network availability
+  connectivity_plus: ^6.0.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

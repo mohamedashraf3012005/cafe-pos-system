@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../injection_container.dart' as di;
@@ -117,7 +117,7 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
         Container(
           height: 60,
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          color: AppColors.surface.withOpacity(0.5),
+          color: AppColors.surface.withAlpha(128),
           child: Row(
             children: [
               // Left Arrow
@@ -157,13 +157,13 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.coffee_rounded, size: 80, color: Colors.white.withOpacity(0.1)),
+                      Icon(Icons.coffee_rounded, size: 80, color: Colors.white.withAlpha(26)),
                       const SizedBox(height: 16),
-                      Text('لا توجد أصناف', style: TextStyle(fontSize: 18, color: Colors.white.withOpacity(0.3))),
+                      Text('لا توجد أصناف', style: TextStyle(fontSize: 18, color: Colors.white.withAlpha(76))),
                       const SizedBox(height: 8),
                       Text(
                         'اضغط على "إضافة صنف" لإضافة منتج جديد',
-                        style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.2)),
+                        style: TextStyle(fontSize: 14, color: Colors.white.withAlpha(51)),
                       ),
                     ],
                   ),
@@ -338,7 +338,7 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
                 labelText: 'اسم الفئة',
                 labelStyle: const TextStyle(color: Colors.white54),
                 hintText: 'مثال: مشروبات ساخنة',
-                hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+                hintStyle: TextStyle(color: Colors.white.withAlpha(51)),
                 filled: true,
                 fillColor: AppColors.background,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -428,7 +428,7 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
                         labelText: 'اسم الصنف',
                         labelStyle: const TextStyle(color: Colors.white54),
                         hintText: 'مثال: كابتشينو',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+                        hintStyle: TextStyle(color: Colors.white.withAlpha(51)),
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -447,7 +447,7 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
 
                     // Category Dropdown
                     DropdownButtonFormField<int>(
-                      value: selectedCategoryId,
+                      initialValue: selectedCategoryId,
                       dropdownColor: AppColors.background,
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                       decoration: InputDecoration(
@@ -486,7 +486,7 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
                         labelText: 'السعر',
                         labelStyle: const TextStyle(color: Colors.white54),
                         hintText: 'مثال: 25.00',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+                        hintStyle: TextStyle(color: Colors.white.withAlpha(51)),
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -581,14 +581,14 @@ class _ProductCardState extends State<_ProductCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: _isHovered ? AppColors.surface.withOpacity(0.9) : AppColors.surface,
+          color: _isHovered ? AppColors.surface.withAlpha(230) : AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isHovered ? AppColors.primary.withOpacity(0.6) : Colors.white12,
+            color: _isHovered ? AppColors.primary.withAlpha(153) : Colors.white12,
             width: _isHovered ? 2 : 1,
           ),
           boxShadow: _isHovered
-              ? [BoxShadow(color: AppColors.primary.withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 4))]
+              ? [BoxShadow(color: AppColors.primary.withAlpha(38), blurRadius: 16, offset: const Offset(0, 4))]
               : [],
         ),
         child: Stack(
@@ -602,7 +602,7 @@ class _ProductCardState extends State<_ProductCard> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.15),
+                      color: AppColors.primary.withAlpha(38),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.coffee_rounded, size: 24, color: AppColors.primary),
@@ -619,7 +619,7 @@ class _ProductCardState extends State<_ProductCard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.15),
+                      color: AppColors.secondary.withAlpha(38),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -633,6 +633,32 @@ class _ProductCardState extends State<_ProductCard> {
                   Text(
                     '${widget.product.price.toStringAsFixed(2)} ج.م',
                     style: const TextStyle(color: AppColors.tableFree, fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: widget.product.isOutOfStock
+                          ? AppColors.error.withAlpha(38)
+                          : (widget.product.isLowStock
+                              ? Colors.orangeAccent.withAlpha(38)
+                              : Colors.white10),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      widget.product.isOutOfStock
+                          ? '🔴 نفد المخزون'
+                          : (widget.product.isLowStock
+                              ? '⚠️ منخفض (${widget.product.stockQuantity})'
+                              : 'المخزون: ${widget.product.stockQuantity}'),
+                      style: TextStyle(
+                        color: widget.product.isOutOfStock
+                            ? AppColors.error
+                            : (widget.product.isLowStock ? Colors.orangeAccent : Colors.white60),
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -743,7 +769,7 @@ class _ActionIcon extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withAlpha(38),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 16, color: color),
@@ -773,7 +799,7 @@ class _HeaderButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.15),
+      color: color.withAlpha(38),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -809,7 +835,7 @@ class _ScrollArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.08),
+      color: Colors.white.withAlpha(20),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,

@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../daily_closing/presentation/cubit/daily_closing_cubit.dart';
+import '../../../daily_closing/presentation/cubit/daily_closing_state.dart';
+import '../../../daily_closing/presentation/pages/daily_closing_history_page.dart';
 import '../cubit/daily_report_cubit.dart';
 
 class DailyReportPage extends StatelessWidget {
@@ -11,8 +14,11 @@ class DailyReportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => di.sl<DailyReportCubit>()..loadReport(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => di.sl<DailyReportCubit>()..loadReport()),
+        BlocProvider(create: (_) => di.sl<DailyClosingCubit>()),
+      ],
       child: const _DailyReportView(),
     );
   }
@@ -43,32 +49,29 @@ class _DailyReportView extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text(
-          'تأكيد إنهاء اليومية',
+          'تأكيد تقفيل حساب اليوم',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'هل أنت متأكد من إنهاء اليومية؟\nسيتم تصفير التقرير وبدء يومية جديدة.',
+          'هل أنت متأكد من تقفيل حساب اليوم؟\nسيتم إغلاق حساب اليوم وإنشاء التقرير المحفوظ وحفظه محليًا.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('تراجع',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('تراجع', style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('نعم، إنهاء اليومية',
-                style: TextStyle(color: Colors.white)),
+            child: const Text('نعم، تقفيل اليوم', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
 
     if (confirmed == true && context.mounted) {
-      context.read<DailyReportCubit>().closeShift();
+      context.read<DailyClosingCubit>().closeDay();
     }
   }
 
@@ -76,8 +79,22 @@ class _DailyReportView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تقرير اليومية'),
+        title: const Text('تقرير اليومية وتقفيل اليوم'),
         actions: [
+          TextButton.icon(
+            icon: const Icon(Icons.history, color: AppColors.secondary, size: 18),
+            label: const Text(
+              'سجل التقفيلات',
+              style: TextStyle(color: AppColors.secondary, fontSize: 13),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DailyClosingHistoryPage()),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
           TextButton.icon(
             icon: const Icon(Icons.key, color: AppColors.secondary, size: 18),
             label: const Text(
@@ -91,183 +108,181 @@ class _DailyReportView extends StatelessWidget {
             builder: (innerCtx) => IconButton(
               icon: const Icon(Icons.refresh),
               tooltip: 'تحديث',
-              onPressed: () =>
-                  innerCtx.read<DailyReportCubit>().loadReport(),
+              onPressed: () => innerCtx.read<DailyReportCubit>().loadReport(),
             ),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: BlocConsumer<DailyReportCubit, DailyReportState>(
+      body: BlocListener<DailyClosingCubit, DailyClosingState>(
         listener: (context, state) {
-          if (state is DailyReportShiftClosed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('تم إنهاء اليومية بنجاح. بدأت يومية جديدة.'),
-                backgroundColor: AppColors.tableFree,
-              ),
-            );
-            // Reload to show empty state
-            context.read<DailyReportCubit>().loadReport();
-          } else if (state is DailyReportError) {
+          if (state is DailyClosingSuccess) {
+            String message = 'تم تقفيل اليوم بنجاح.';
+            if (state.isOnline) {
+              message += '\nتم إرسال تقرير اليوم إلى Telegram ✓';
+            } else {
+              message += '\n⚠️ لا يوجد اتصال بالإنترنت.\nسيتم إرسال تقرير اليوم تلقائيًا على Telegram عند عودة الاتصال.';
+            }
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppColors.error),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is DailyReportLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state is DailyReportLoaded) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Total Revenue Card ──────────────────────────────────
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'مجموع إيرادات اليوم',
-                          style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 18),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          '${state.totalRevenue.toStringAsFixed(2)} ج.م',
-                          style: const TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 48,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${state.invoices.length} فاتورة',
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Transactions List ───────────────────────────────────
-                  const Text(
-                    'المعاملات',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: state.invoices.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'لا توجد معاملات في هذه الوردية',
-                              style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 16),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: state.invoices.length,
-                            itemBuilder: (context, index) {
-                              final inv = state.invoices[index];
-                              final formattedDate = DateFormat(
-                                      'yyyy/MM/dd – HH:mm',
-                                      'ar')
-                                  .format(inv.createdAt);
-                              return Container(
-                                margin:
-                                    const EdgeInsets.only(bottom: 10),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius:
-                                      BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.receipt_long,
-                                        color: AppColors.primary),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            inv.invoiceNumber,
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight:
-                                                    FontWeight.bold),
-                                          ),
-                                          Text(
-                                            formattedDate,
-                                            style: const TextStyle(
-                                                color: AppColors
-                                                    .textSecondary,
-                                                fontSize: 12),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Text(
-                                      '${inv.grandTotal.toStringAsFixed(2)} ج.م',
-                                      style: const TextStyle(
-                                        color: AppColors.secondary,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // ── Close Shift Button ──────────────────────────────────
-                  SizedBox(
-                    height: 60,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.lock_clock, color: Colors.white),
-                      label: const Text(
-                        'إنهاء اليومية',
-                        style:
-                            TextStyle(fontSize: 20, color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () => _confirmCloseShift(context),
-                    ),
-                  ),
-                ],
+                content: Text(message),
+                backgroundColor: AppColors.tableFree,
+                duration: const Duration(seconds: 5),
               ),
             );
+            // Reload daily report page to reflect closed shift
+            context.read<DailyReportCubit>().loadReport();
+          } else if (state is DailyClosingError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+            );
           }
-
-          return const SizedBox.shrink();
         },
+        child: BlocConsumer<DailyReportCubit, DailyReportState>(
+          listener: (context, state) {
+            if (state is DailyReportError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is DailyReportLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (state is DailyReportLoaded) {
+              return Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // ── Total Revenue Card ──────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary, width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'مجموع إيرادات الوردية الحالية',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 18),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '${state.totalRevenue.toStringAsFixed(2)} ج.م',
+                            style: const TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${state.invoices.length} فاتورة مفتوحة',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // ── Transactions List ───────────────────────────────────
+                    const Text(
+                      'معاملات الوردية الحالية',
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: state.invoices.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'لا توجد معاملات في هذه الوردية',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: state.invoices.length,
+                              itemBuilder: (context, index) {
+                                final inv = state.invoices[index];
+                                final formattedDate = DateFormat('yyyy/MM/dd – HH:mm', 'ar').format(inv.createdAt);
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.receipt_long, color: AppColors.primary),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              inv.invoiceNumber,
+                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                            ),
+                                            Text(
+                                              formattedDate,
+                                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        '${inv.grandTotal.toStringAsFixed(2)} ج.م',
+                                        style: const TextStyle(
+                                          color: AppColors.secondary,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── Close Shift Button ──────────────────────────────────
+                    BlocBuilder<DailyClosingCubit, DailyClosingState>(
+                      builder: (context, closingState) {
+                        if (closingState is DailyClosingLoading) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        return SizedBox(
+                          height: 60,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.lock_clock, color: Colors.white),
+                            label: const Text(
+                              'تقفيل حساب اليوم',
+                              style: TextStyle(fontSize: 20, color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () => _confirmCloseShift(context),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -322,8 +337,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       _errorMessage = '';
     });
 
-    final success =
-        await context.read<AuthCubit>().changeManagerPin(oldPin, newPin);
+    final success = await context.read<AuthCubit>().changeManagerPin(oldPin, newPin);
 
     if (!mounted) return;
 
@@ -355,7 +369,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.15),
+                  color: AppColors.primary.withAlpha(38),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.key, color: AppColors.primary, size: 36),
@@ -377,13 +391,11 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                 textDirection: TextDirection.rtl,
               ),
               const SizedBox(height: 20),
-
               _buildPinTextField(_oldPinController, 'كلمة المرور الحالية (4 أرقام)'),
               const SizedBox(height: 12),
               _buildPinTextField(_newPinController, 'كلمة المرور الجديدة (4 أرقام)'),
               const SizedBox(height: 12),
               _buildPinTextField(_confirmPinController, 'تأكيد كلمة المرور الجديدة'),
-
               if (_errorMessage.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -392,9 +404,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   textDirection: TextDirection.rtl,
                 ),
               ],
-
               const SizedBox(height: 24),
-
               if (_isLoading)
                 const CircularProgressIndicator(color: AppColors.primary)
               else
@@ -410,8 +420,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                             side: BorderSide(color: Colors.grey[700]!),
                           ),
                         ),
-                        child: const Text('إلغاء',
-                            style: TextStyle(color: AppColors.textSecondary)),
+                        child: const Text('إلغاء', style: TextStyle(color: AppColors.textSecondary)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -426,8 +435,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text('حفظ التغيير',
-                            style: TextStyle(color: Colors.white, fontSize: 15)),
+                        child: const Text('حفظ التغيير', style: TextStyle(color: Colors.white, fontSize: 15)),
                       ),
                     ),
                   ],
@@ -449,8 +457,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       style: const TextStyle(color: Colors.white, fontSize: 16),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle:
-            const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
         counterText: '',
         filled: true,
         fillColor: AppColors.background,
@@ -458,8 +465,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide.none,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }

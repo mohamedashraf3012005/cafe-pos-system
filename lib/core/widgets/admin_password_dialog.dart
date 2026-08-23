@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_colors.dart';
 import '../../injection_container.dart' as di;
@@ -145,7 +145,7 @@ class _AdminPasswordDialogContentState
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.15),
+                  color: AppColors.error.withAlpha(38),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.admin_panel_settings,

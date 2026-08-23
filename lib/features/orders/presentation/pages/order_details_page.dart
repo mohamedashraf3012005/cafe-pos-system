@@ -1,14 +1,16 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/services/printer_service.dart';
-import '../../../../core/services/audit_log_service.dart';
-import '../../../../core/widgets/admin_password_dialog.dart';
-import '../../../../injection_container.dart' as di;
-import '../../domain/entities/product_entity.dart';
-import '../cubit/orders_cubit.dart';
-import '../cubit/orders_state.dart';
-import '../../../checkout/presentation/pages/checkout_page.dart';
+import 'package:cash_cafe/core/constants/app_colors.dart';
+import 'package:cash_cafe/core/services/printer_service.dart';
+import 'package:cash_cafe/core/services/audit_log_service.dart';
+import 'package:cash_cafe/core/widgets/admin_password_dialog.dart';
+import 'package:cash_cafe/injection_container.dart' as di;
+import 'package:cash_cafe/features/playstation/presentation/cubit/playstation_cubit.dart';
+import 'package:cash_cafe/features/playstation/presentation/widgets/playstation_timer_widget.dart';
+import 'package:cash_cafe/features/orders/domain/entities/product_entity.dart';
+import 'package:cash_cafe/features/orders/presentation/cubit/orders_cubit.dart';
+import 'package:cash_cafe/features/orders/presentation/cubit/orders_state.dart';
+import 'package:cash_cafe/features/checkout/presentation/pages/checkout_page.dart';
 
 class OrderDetailsPage extends StatefulWidget {
   final int? tableId;
@@ -60,7 +62,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         .toList();
   }
 
-  // Task 3: Print kitchen receipt
   Future<void> _printKitchen(BuildContext context, OrdersLoaded state) async {
     if (state.activeOrder == null || state.activeOrder!.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +94,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     }
   }
 
-  // Task 4 + Admin password protection: Cancel table with admin PIN verification
   Future<void> _cancelTable(BuildContext context) async {
     if (widget.tableId == null) return;
 
@@ -113,7 +113,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     if (!context.mounted) return;
 
     if (success) {
-      // Log the action
       final auditService = di.sl<AuditLogService>();
       await auditService.log(
         username: 'مدير النظام',
@@ -129,16 +128,24 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           backgroundColor: AppColors.tableFree,
         ),
       );
-      Navigator.pop(context); // return to tables page
+      Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => di.sl<OrdersCubit>()
-        ..initForTable(widget.tableId,
-            orderType: widget.isTakeaway ? 'takeaway' : 'dine_in'),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => di.sl<OrdersCubit>()
+            ..initForTable(widget.tableId,
+                orderType: widget.isTakeaway ? 'takeaway' : 'dine_in'),
+        ),
+        BlocProvider(
+          create: (context) => di.sl<PlayStationCubit>()
+            ..initForTable(widget.tableId),
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           title: Text(widget.isTakeaway
@@ -150,7 +157,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
                 ),
-          // Task 4: Cancel Table action in AppBar (only for dine_in tables)
           actions: widget.isTakeaway
               ? null
               : [
@@ -175,9 +181,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   child: Text(state.message,
                       style: const TextStyle(color: AppColors.error)));
             } else if (state is OrdersLoaded) {
+              final hasItemsOrPlaystation = state.activeOrder != null &&
+                  (state.activeOrder!.items.isNotEmpty ||
+                      state.activeOrder!.playStationCost > 0);
+
               return Row(
                 children: [
-                  // ── Left: Menu Products ──────────────────────────────────
+                  // Left: Menu
                   Expanded(
                     flex: 2,
                     child: Padding(
@@ -233,13 +243,13 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                 crossAxisCount: 4,
                                 crossAxisSpacing: 8,
                                 mainAxisSpacing: 8,
-                                childAspectRatio: 0.9,
+                                childAspectRatio: 0.85,
                               ),
                               itemCount: _getFilteredProducts(state).length,
                               itemBuilder: (context, index) {
                                 final product =
                                     _getFilteredProducts(state)[index];
-                                return _buildProductCard(context, product);
+                                return _buildProductCard(context, product, state);
                               },
                             ),
                           ),
@@ -248,9 +258,9 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                     ),
                   ),
 
-                  // ── Right: Active Cart ───────────────────────────────────
+                  // Right: Cart
                   Container(
-                    width: 400,
+                    width: 420,
                     color: AppColors.surface,
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -261,61 +271,96 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white)),
-                        const Divider(color: Colors.white24, height: 32),
+                        const SizedBox(height: 12),
+
+                        // PlayStation Live Timer
+                        PlayStationTimerWidget(
+                          tableId: widget.tableId,
+                          tableNumber: widget.tableNumber,
+                          onSessionStopped: (completed) {
+                            context.read<OrdersCubit>().setPlayStationCost(
+                                  completed.calculatedAmount,
+                                  '${completed.deviceName} (${completed.humanDuration})',
+                                  completed.id,
+                                  tableId: widget.tableId,
+                                  orderType: widget.isTakeaway ? 'takeaway' : 'dine_in',
+                                );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(color: Colors.white24, height: 16),
+
                         Expanded(
-                          child: state.activeOrder == null ||
-                                  state.activeOrder!.items.isEmpty
+                          child: (state.activeOrder == null ||
+                                  (state.activeOrder!.items.isEmpty &&
+                                      state.activeOrder!.playStationCost <= 0))
                               ? const Center(
                                   child: Text('لا توجد أصناف بعد',
                                       style:
                                           TextStyle(color: Colors.white54)))
-                              : ListView.builder(
-                                  itemCount: state.activeOrder!.items.length,
-                                  itemBuilder: (context, index) {
-                                    final item =
-                                        state.activeOrder!.items[index];
-                                    return _buildOrderItem(context, item);
-                                  },
+                              : ListView(
+                                  children: [
+                                    ...state.activeOrder!.items.map((item) {
+                                      return _buildOrderItem(context, item, state.availableProducts);
+                                    }),
+                                    if (state.activeOrder!.playStationCost > 0)
+                                      _buildPlayStationOrderItem(
+                                        context,
+                                        state.activeOrder!.playStationDescription ?? 'PlayStation',
+                                        state.activeOrder!.playStationCost,
+                                      ),
+                                  ],
                                 ),
                         ),
                         const Divider(color: Colors.white24, height: 32),
+
+                        if (state.activeOrder != null && state.activeOrder!.playStationCost > 0) ...[
+                          _buildSummaryRow(
+                            'المشروبات والأطعمة',
+                            '${state.activeOrder?.itemsSubtotal.toStringAsFixed(2) ?? "0.00"} ج.م',
+                          ),
+                          const SizedBox(height: 6),
+                          _buildSummaryRow(
+                            'تكلفة البلايستيشن',
+                            '${state.activeOrder?.playStationCost.toStringAsFixed(2) ?? "0.00"} ج.م',
+                          ),
+                          const SizedBox(height: 6),
+                        ],
+
                         _buildSummaryRow(
                           'المجموع الفرعي',
                           '${state.activeOrder?.subtotal.toStringAsFixed(2) ?? "0.00"} ج.م',
                         ),
                         const SizedBox(height: 16),
 
-                        // Task 3: Kitchen Print Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: OutlinedButton.icon(
-                            icon: const Icon(Icons.restaurant,
-                                color: AppColors.secondary),
-                            label: const Text(
-                              'طباعة للمطبخ',
-                              style: TextStyle(
-                                  color: AppColors.secondary, fontSize: 16),
+                        if (state.activeOrder != null && state.activeOrder!.items.isNotEmpty) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              icon: const Icon(Icons.restaurant,
+                                  color: AppColors.secondary),
+                              label: const Text(
+                                'طباعة للمطبخ',
+                                style: TextStyle(
+                                    color: AppColors.secondary, fontSize: 16),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                    color: AppColors.secondary, width: 1.5),
+                              ),
+                              onPressed: () => _printKitchen(context, state),
                             ),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(
-                                  color: AppColors.secondary, width: 1.5),
-                            ),
-                            onPressed: state.activeOrder != null &&
-                                    state.activeOrder!.items.isNotEmpty
-                                ? () => _printKitchen(context, state)
-                                : null,
                           ),
-                        ),
-                        const SizedBox(height: 10),
+                          const SizedBox(height: 10),
+                        ],
 
                         // Checkout Button
                         SizedBox(
                           width: double.infinity,
                           height: 60,
                           child: ElevatedButton(
-                            onPressed: state.activeOrder != null &&
-                                    state.activeOrder!.items.isNotEmpty
+                            onPressed: hasItemsOrPlaystation
                                 ? () {
                                     Navigator.push(
                                       context,
@@ -373,9 +418,37 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     );
   }
 
-  Widget _buildProductCard(BuildContext context, ProductEntity product) {
+  Widget _buildProductCard(BuildContext context, ProductEntity product, OrdersLoaded state) {
+    final isOutOfStock = product.stockQuantity <= 0;
+    final isLowStock = product.stockQuantity > 0 && product.stockQuantity <= product.minimumStock;
+
     return InkWell(
       onTap: () {
+        if (isOutOfStock) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('الكمية غير متوفرة في المخزون للمنتج "${product.name}". المتاح حاليًا: 0'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
+        final existingItem = state.activeOrder?.items
+            .where((i) => i.productId == product.id)
+            .firstOrNull;
+        if (existingItem != null && existingItem.quantity >= product.stockQuantity) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('الكمية غير متوفرة في المخزون. المتاح حاليًا: ${product.stockQuantity}'),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+
         context.read<OrdersCubit>().addProductToOrder(
               widget.tableId,
               product,
@@ -386,37 +459,70 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: isOutOfStock ? AppColors.surface.withAlpha(128) : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(
+            color: isOutOfStock
+                ? AppColors.error.withAlpha(128)
+                : (isLowStock ? Colors.orangeAccent.withAlpha(128) : Colors.white12),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.fastfood, size: 36, color: AppColors.primary),
-              const SizedBox(height: 8),
+              if (isOutOfStock)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withAlpha(51),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text('🔴 نفد المخزون', style: TextStyle(color: AppColors.error, fontSize: 10, fontWeight: FontWeight.bold)),
+                )
+              else if (isLowStock)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orangeAccent.withAlpha(51),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text('⚠️ منخفض (${product.stockQuantity})', style: const TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white10,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text('المتاح: ${product.stockQuantity}', style: const TextStyle(color: Colors.white60, fontSize: 10)),
+                ),
+              const SizedBox(height: 6),
+              const Icon(Icons.fastfood, size: 30, color: AppColors.primary),
+              const SizedBox(height: 6),
               Expanded(
                 child: Center(
                   child: Text(
                     product.name,
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: isOutOfStock ? Colors.white54 : Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13),
+                        fontSize: 12),
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 '${product.price.toStringAsFixed(2)} ج.م',
                 style: const TextStyle(
                     color: AppColors.secondary,
-                    fontWeight: FontWeight.bold),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13),
               ),
             ],
           ),
@@ -425,10 +531,12 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     );
   }
 
-  Widget _buildOrderItem(BuildContext context, dynamic item) {
+  Widget _buildOrderItem(BuildContext context, dynamic item, List<ProductEntity> products) {
+    final product = products.where((p) => p.id == item.productId).firstOrNull;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(8),
@@ -452,7 +560,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
             children: [
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline,
-                    color: AppColors.error),
+                    color: AppColors.error, size: 20),
                 onPressed: () {
                   context.read<OrdersCubit>().updateQuantity(
                         widget.tableId,
@@ -467,8 +575,19 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   style: const TextStyle(color: Colors.white, fontSize: 16)),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline,
-                    color: AppColors.tableFree),
+                    color: AppColors.tableFree, size: 20),
                 onPressed: () {
+                  if (product != null && item.quantity >= product.stockQuantity) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('الكمية غير متوفرة في المخزون. المتاح حاليًا: ${product.stockQuantity}'),
+                        backgroundColor: AppColors.error,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
+
                   context.read<OrdersCubit>().updateQuantity(
                         widget.tableId,
                         item.id,
@@ -489,25 +608,55 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
     );
   }
 
+  Widget _buildPlayStationOrderItem(BuildContext context, String description, double cost) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A237E).withAlpha(77),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blueAccent.withAlpha(102)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.sports_esports, color: Colors.lightBlueAccent, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '🎮 $description',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                const Text('جلسة بلايستيشن', style: TextStyle(color: Colors.white54, fontSize: 11)),
+              ],
+            ),
+          ),
+          Text(
+            '${cost.toStringAsFixed(2)} ج.م',
+            style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSummaryRow(String title, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title,
-            style: const TextStyle(color: Colors.white54, fontSize: 18)),
+            style: const TextStyle(color: Colors.white54, fontSize: 16)),
         Text(value,
             style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.bold)),
       ],
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Scroll Arrow Button
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _ScrollArrow extends StatelessWidget {
   final IconData icon;
@@ -518,7 +667,7 @@ class _ScrollArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.08),
+      color: Colors.white.withAlpha(20),
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
