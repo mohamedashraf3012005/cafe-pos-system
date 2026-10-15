@@ -16,12 +16,13 @@ part 'app_database.g.dart';
   PlayStationDevices,
   PlayStationSessions,
   InventoryMovements,
+  InvoiceItems,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 6; // v6: adds PlayStation + Inventory support
+  int get schemaVersion => 7; // v7: InvoiceItems, trackInventory, walletTotal, instapayTotal
 
   @override
   MigrationStrategy get migration {
@@ -77,6 +78,18 @@ class AppDatabase extends _$AppDatabase {
               await _seedDefaultPlayStationDevice();
             }
           } catch (_) {}
+        }
+        // v6→v7: InvoiceItems table, trackInventory on Products, wallet/instapay totals on DailyClosings
+        if (from < 7) {
+          // Mod 2: InvoiceItems table
+          await safeCreateTable(invoiceItems);
+
+          // Mod 3: trackInventory column on Products (default true)
+          await safeAddColumn(products, products.trackInventory);
+
+          // Mod 4: wallet and instapay totals on DailyClosings
+          await safeAddColumn(dailyClosings, dailyClosings.walletTotal);
+          await safeAddColumn(dailyClosings, dailyClosings.instapayTotal);
         }
       },
     );

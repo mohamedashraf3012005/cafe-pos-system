@@ -1,4 +1,5 @@
 import '../entities/daily_closing_entity.dart';
+import '../entities/invoice_item_entity.dart';
 
 abstract class DailyClosingRepository {
   /// Check if a closing record already exists for the given date (yyyy-MM-dd).
@@ -21,4 +22,10 @@ abstract class DailyClosingRepository {
 
   /// Get a single closing record by ID.
   Future<DailyClosingEntity?> getClosingById(int id);
+
+  /// Get all invoices for a given calendar date (yyyy-MM-dd).
+  Future<List<InvoiceDetailEntity>> getInvoicesForClosingDate(String dateStr);
+
+  /// Get full invoice details with items snapshot (with graceful fallback for older invoices).
+  Future<InvoiceDetailEntity?> getInvoiceDetails(int invoiceId);
 }

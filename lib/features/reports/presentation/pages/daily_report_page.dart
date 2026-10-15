@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/invoice_details_dialog.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../daily_closing/presentation/cubit/daily_closing_cubit.dart';
@@ -153,103 +154,149 @@ class _DailyReportView extends StatelessWidget {
             }
 
             if (state is DailyReportLoaded) {
+              double cashTotal = 0.0;
+              double walletTotal = 0.0;
+              double instapayTotal = 0.0;
+              for (final inv in state.invoices) {
+                if (inv.paymentMethod == 'wallet') {
+                  walletTotal += inv.grandTotal;
+                } else if (inv.paymentMethod == 'instapay') {
+                  instapayTotal += inv.grandTotal;
+                } else {
+                  cashTotal += inv.grandTotal;
+                }
+              }
+
               return Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ── Total Revenue Card ──────────────────────────────────
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.primary, width: 2),
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'مجموع إيرادات الوردية الحالية',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 18),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '${state.totalRevenue.toStringAsFixed(2)} ج.م',
-                            style: const TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
+                          // ── Total Revenue Card ──────────────────────────────────
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.primary, width: 2),
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'مجموع إيرادات الوردية الحالية',
+                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${state.totalRevenue.toStringAsFixed(2)} ج.م',
+                                  style: const TextStyle(
+                                    color: AppColors.secondary,
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '${state.invoices.length} فاتورة مفتوحة',
+                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                                ),
+                                const SizedBox(height: 14),
+                                const Divider(color: Colors.white12, height: 1),
+                                const SizedBox(height: 12),
+                                // Payment Breakdown Row
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    _buildPaymentSummaryItem('💵 نقدي (Cash)', cashTotal, AppColors.tableFree),
+                                    Container(width: 1, height: 30, color: Colors.white12),
+                                    _buildPaymentSummaryItem('📱 محفظة (Wallet)', walletTotal, Colors.deepPurpleAccent),
+                                    Container(width: 1, height: 30, color: Colors.white12),
+                                    _buildPaymentSummaryItem('⚡ إنستاباي (InstaPay)', instapayTotal, Colors.amber),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${state.invoices.length} فاتورة مفتوحة',
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
+                          const SizedBox(height: 20),
 
-                    // ── Transactions List ───────────────────────────────────
-                    const Text(
-                      'معاملات الوردية الحالية',
-                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: state.invoices.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'لا توجد معاملات في هذه الوردية',
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: state.invoices.length,
-                              itemBuilder: (context, index) {
-                                final inv = state.invoices[index];
-                                final formattedDate = DateFormat('yyyy/MM/dd – HH:mm', 'ar').format(inv.createdAt);
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.receipt_long, color: AppColors.primary),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              inv.invoiceNumber,
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                            ),
-                                            Text(
-                                              formattedDate,
-                                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                                            ),
-                                          ],
+                          // ── Transactions List ───────────────────────────────────
+                          const Text(
+                            'معاملات الوردية الحالية (اضغط لعرض الأصناف وإعادة الطباعة)',
+                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            child: state.invoices.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'لا توجد معاملات في هذه الوردية',
+                                      style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: state.invoices.length,
+                                    itemBuilder: (context, index) {
+                                      final inv = state.invoices[index];
+                                      final formattedDate = DateFormat('yyyy/MM/dd – HH:mm', 'ar').format(inv.createdAt);
+                                      return Container(
+                                        margin: const EdgeInsets.only(bottom: 8),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(10),
                                         ),
-                                      ),
-                                      Text(
-                                        '${inv.grandTotal.toStringAsFixed(2)} ج.م',
-                                        style: const TextStyle(
-                                          color: AppColors.secondary,
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
+                                        child: ListTile(
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                          leading: const Icon(Icons.receipt_long, color: AppColors.primary),
+                                          title: Row(
+                                            children: [
+                                              Text(
+                                                inv.invoiceNumber,
+                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white10,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  inv.paymentMethodLabel,
+                                                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                                                ),
+                                              ),
+                                              const Spacer(),
+                                              Text(
+                                                '${inv.grandTotal.toStringAsFixed(2)} ج.م',
+                                                style: const TextStyle(
+                                                  color: AppColors.secondary,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          subtitle: Row(
+                                            children: [
+                                              Text(
+                                                formattedDate,
+                                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                              ),
+                                              const Spacer(),
+                                              const Text('تفاصيل الأصناف / إعادة طباعة 🖨️', style: TextStyle(color: AppColors.primary, fontSize: 11)),
+                                            ],
+                                          ),
+                                          onTap: () async {
+                                            final details = await context.read<DailyClosingCubit>().getInvoiceDetails(inv.id);
+                                            if (details != null && context.mounted) {
+                                              showInvoiceDetailsDialog(context, details);
+                                            }
+                                          },
                                         ),
-                                      ),
-                                    ],
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                            ),
-                    ),
+                          ),
                     const SizedBox(height: 16),
 
                     // ── Close Shift Button ──────────────────────────────────
@@ -284,6 +331,26 @@ class _DailyReportView extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildPaymentSummaryItem(String label, double amount, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${amount.toStringAsFixed(2)} ج.م',
+          style: TextStyle(
+            color: color,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

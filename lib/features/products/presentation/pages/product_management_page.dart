@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../injection_container.dart' as di;
@@ -397,6 +397,7 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
     final nameController = TextEditingController(text: product?.name ?? '');
     final priceController = TextEditingController(text: product != null ? product.price.toString() : '');
     int selectedCategoryId = product?.categoryId ?? categories.first.id;
+    bool trackInventory = product?.trackInventory ?? true;
     final isEdit = product != null;
 
     showDialog(
@@ -503,6 +504,38 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
                         suffixStyle: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold),
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // Track Inventory Switch
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: trackInventory,
+                        onChanged: (val) {
+                          setDialogState(() => trackInventory = val);
+                        },
+                        title: const Text(
+                          'ربط المنتج بالمخزون',
+                          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          trackInventory
+                              ? 'يتم فحص الكمية وخصمها من المخزون عند البيع'
+                              : 'منتج غير مرتبط بمخزون (متاح للبيع دائماً دون قيود)',
+                          style: TextStyle(
+                            color: trackInventory ? AppColors.tableFree : Colors.white54,
+                            fontSize: 12,
+                          ),
+                        ),
+                        activeThumbColor: AppColors.tableFree,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -525,9 +558,9 @@ class _ProductManagementViewState extends State<_ProductManagementView> {
                       return;
                     }
                     if (isEdit) {
-                      cubit.updateProduct(product.id, name, price, selectedCategoryId);
+                      cubit.updateProduct(product.id, name, price, selectedCategoryId, trackInventory: trackInventory);
                     } else {
-                      cubit.addProduct(name, price, selectedCategoryId);
+                      cubit.addProduct(name, price, selectedCategoryId, trackInventory: trackInventory);
                     }
                     Navigator.pop(dialogContext);
                   },
@@ -638,23 +671,29 @@ class _ProductCardState extends State<_ProductCard> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                     decoration: BoxDecoration(
-                      color: widget.product.isOutOfStock
-                          ? AppColors.error.withAlpha(38)
-                          : (widget.product.isLowStock
-                              ? Colors.orangeAccent.withAlpha(38)
-                              : Colors.white10),
+                      color: !widget.product.trackInventory
+                          ? Colors.white10
+                          : (widget.product.isOutOfStock
+                              ? AppColors.error.withAlpha(38)
+                              : (widget.product.isLowStock
+                                  ? Colors.orangeAccent.withAlpha(38)
+                                  : Colors.white10)),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      widget.product.isOutOfStock
-                          ? '🔴 نفد المخزون'
-                          : (widget.product.isLowStock
-                              ? '⚠️ منخفض (${widget.product.stockQuantity})'
-                              : 'المخزون: ${widget.product.stockQuantity}'),
+                      !widget.product.trackInventory
+                          ? '⚪ غير مرتبط بمخزون'
+                          : (widget.product.isOutOfStock
+                              ? '🔴 نفد المخزون'
+                              : (widget.product.isLowStock
+                                  ? '⚠️ منخفض (${widget.product.stockQuantity})'
+                                  : 'المخزون: ${widget.product.stockQuantity}')),
                       style: TextStyle(
-                        color: widget.product.isOutOfStock
-                            ? AppColors.error
-                            : (widget.product.isLowStock ? Colors.orangeAccent : Colors.white60),
+                        color: !widget.product.trackInventory
+                            ? Colors.white60
+                            : (widget.product.isOutOfStock
+                                ? AppColors.error
+                                : (widget.product.isLowStock ? Colors.orangeAccent : Colors.white60)),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),

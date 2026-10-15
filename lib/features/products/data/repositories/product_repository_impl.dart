@@ -27,28 +27,31 @@ class ProductRepositoryImpl implements ProductRepository {
               hasAddons: p.hasAddons,
               stockQuantity: p.stockQuantity,
               minimumStock: p.minimumStock,
+              trackInventory: p.trackInventory,
             ))
         .toList();
   }
 
   @override
-  Future<void> addProduct(String name, double price, int categoryId) async {
+  Future<void> addProduct(String name, double price, int categoryId, {bool trackInventory = true}) async {
     await db.into(db.products).insert(
           ProductsCompanion.insert(
             name: name,
             price: price,
             categoryId: categoryId,
+            trackInventory: Value(trackInventory),
           ),
         );
   }
 
   @override
-  Future<void> updateProduct(int id, String name, double price, int categoryId) async {
+  Future<void> updateProduct(int id, String name, double price, int categoryId, {bool? trackInventory}) async {
     await (db.update(db.products)..where((p) => p.id.equals(id))).write(
       ProductsCompanion(
         name: Value(name),
         price: Value(price),
         categoryId: Value(categoryId),
+        trackInventory: trackInventory != null ? Value(trackInventory) : const Value.absent(),
       ),
     );
   }

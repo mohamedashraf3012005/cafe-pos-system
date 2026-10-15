@@ -86,18 +86,18 @@ class ProductManagementCubit extends Cubit<ProductManagementState> {
 
   // ── Products ──────────────────────────────────────────────────────────────
 
-  Future<void> addProduct(String name, double price, int categoryId) async {
+  Future<void> addProduct(String name, double price, int categoryId, {bool trackInventory = true}) async {
     try {
-      await repository.addProduct(name, price, categoryId);
+      await repository.addProduct(name, price, categoryId, trackInventory: trackInventory);
       await _reload();
     } catch (e) {
       emit(ProductManagementError(e.toString()));
     }
   }
 
-  Future<void> updateProduct(int id, String name, double price, int categoryId) async {
+  Future<void> updateProduct(int id, String name, double price, int categoryId, {bool? trackInventory}) async {
     try {
-      await repository.updateProduct(id, name, price, categoryId);
+      await repository.updateProduct(id, name, price, categoryId, trackInventory: trackInventory);
       await _reload();
     } catch (e) {
       emit(ProductManagementError(e.toString()));

@@ -30,6 +30,7 @@ class OrderRepositoryImpl implements OrderRepository {
               hasAddons: p.hasAddons,
               stockQuantity: p.stockQuantity,
               minimumStock: p.minimumStock,
+              trackInventory: p.trackInventory,
             ))
         .toList();
   }

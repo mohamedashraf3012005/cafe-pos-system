@@ -1,8 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/invoice_details_dialog.dart';
 import '../../../../injection_container.dart' as di;
 import '../../domain/entities/daily_closing_entity.dart';
+import '../../domain/entities/invoice_item_entity.dart';
 import '../cubit/daily_closing_cubit.dart';
 import '../cubit/daily_closing_state.dart';
 
@@ -38,7 +40,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
           ],
         ),
         content: SizedBox(
-          width: 450,
+          width: 480,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -57,10 +59,14 @@ class _DailyClosingHistoryView extends StatelessWidget {
                 _buildDetailRow('صافي المبيعات', '${closing.netSales.toStringAsFixed(2)} ج.م', isBold: true),
                 const Divider(color: Colors.white24, height: 24),
                 _buildDetailRow('💵 المدفوع نقدي (Cash)', '${closing.cashTotal.toStringAsFixed(2)} ج.م'),
+                if (closing.walletTotal > 0)
+                  _buildDetailRow('📱 المدفوع محفظة (Wallet)', '${closing.walletTotal.toStringAsFixed(2)} ج.م', color: Colors.deepPurpleAccent),
+                if (closing.instapayTotal > 0)
+                  _buildDetailRow('⚡ المدفوع إنستاباي (InstaPay)', '${closing.instapayTotal.toStringAsFixed(2)} ج.م', color: Colors.amber),
                 if (closing.cardTotal > 0)
                   _buildDetailRow('💳 المدفوع بطاقة (Card)', '${closing.cardTotal.toStringAsFixed(2)} ج.م'),
                 if (closing.otherPayments > 0)
-                  _buildDetailRow('📱 طرق أخرى', '${closing.otherPayments.toStringAsFixed(2)} ج.م'),
+                  _buildDetailRow('🔹 طرق أخرى', '${closing.otherPayments.toStringAsFixed(2)} ج.م'),
                 const Divider(color: Colors.white24, height: 24),
                 _buildDetailRow('حالة اليوم', 'مغلق (Closed)', color: AppColors.tableFree),
               ],
@@ -68,10 +74,112 @@ class _DailyClosingHistoryView extends StatelessWidget {
           ),
         ),
         actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إغلاق', style: TextStyle(color: Colors.white)),
+            child: const Text('إغلاق', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.secondary,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.receipt_long, size: 18),
+            label: const Text('عرض فواتير هذا اليوم', style: TextStyle(fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _showDayInvoices(context, closing.closingDate);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDayInvoices(BuildContext context, String dateStr) {
+    final cubit = context.read<DailyClosingCubit>();
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.receipt_long_rounded, color: AppColors.secondary),
+            const SizedBox(width: 10),
+            Text('فواتير يوم $dateStr', style: const TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: 550,
+          height: 420,
+          child: FutureBuilder<List<InvoiceDetailEntity>>(
+            future: cubit.getInvoicesForClosingDate(dateStr),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return const Center(child: Text('حدث خطأ أثناء تحميل الفواتير', style: TextStyle(color: AppColors.error)));
+              }
+              final invoices = snapshot.data ?? [];
+              if (invoices.isEmpty) {
+                return const Center(child: Text('لا توجد فواتير مسجلة لهذا اليوم', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)));
+              }
+
+              return ListView.builder(
+                itemCount: invoices.length,
+                itemBuilder: (context, index) {
+                  final inv = invoices[index];
+                  final timeStr = '${inv.createdAt.hour.toString().padLeft(2, '0')}:${inv.createdAt.minute.toString().padLeft(2, '0')}';
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                      title: Row(
+                        children: [
+                          Text(inv.invoiceNumber, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                          const Spacer(),
+                          Text('${inv.grandTotal.toStringAsFixed(2)} ج.م', style: const TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 15)),
+                        ],
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Row(
+                          children: [
+                            Text('الوقت: $timeStr', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.white10,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(inv.paymentMethodLabel, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                            ),
+                            const Spacer(),
+                            const Text('اضغط للتفاصيل والطباعة', style: TextStyle(color: AppColors.primary, fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                      trailing: const Icon(Icons.chevron_left_rounded, color: Colors.white54),
+                      onTap: () => showInvoiceDetailsDialog(context, inv),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('إغلاق', style: TextStyle(color: Colors.white54)),
           ),
         ],
       ),

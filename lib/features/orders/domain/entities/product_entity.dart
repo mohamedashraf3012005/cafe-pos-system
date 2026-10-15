@@ -6,6 +6,7 @@ class ProductEntity {
   final bool hasAddons;
   final int stockQuantity;
   final int minimumStock;
+  final bool trackInventory;
 
   ProductEntity({
     required this.id,
@@ -15,8 +16,9 @@ class ProductEntity {
     this.hasAddons = false,
     this.stockQuantity = 0,
     this.minimumStock = 0,
+    this.trackInventory = true,
   });
 
-  bool get isOutOfStock => stockQuantity <= 0;
-  bool get isLowStock => stockQuantity > 0 && stockQuantity <= minimumStock;
+  bool get isOutOfStock => trackInventory && stockQuantity <= 0;
+  bool get isLowStock => trackInventory && stockQuantity > 0 && stockQuantity <= minimumStock;
 }

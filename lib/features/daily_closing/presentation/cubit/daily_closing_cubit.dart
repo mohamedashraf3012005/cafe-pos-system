@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/whatsapp_queue_processor.dart';
 import '../../../../core/services/whatsapp_settings_service.dart';
+import '../../domain/entities/invoice_item_entity.dart';
 import '../../domain/repositories/daily_closing_repository.dart';
 import 'daily_closing_state.dart';
 
@@ -58,5 +59,13 @@ class DailyClosingCubit extends Cubit<DailyClosingState> {
     } catch (e) {
       emit(DailyClosingError(e.toString().replaceAll('Exception: ', '')));
     }
+  }
+
+  Future<List<InvoiceDetailEntity>> getInvoicesForClosingDate(String dateStr) {
+    return dailyClosingRepository.getInvoicesForClosingDate(dateStr);
+  }
+
+  Future<InvoiceDetailEntity?> getInvoiceDetails(int invoiceId) {
+    return dailyClosingRepository.getInvoiceDetails(invoiceId);
   }
 }

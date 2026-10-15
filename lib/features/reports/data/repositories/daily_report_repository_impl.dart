@@ -22,6 +22,7 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
               grandTotal: inv.grandTotal,
               createdAt: inv.createdAt,
               isClosedShift: inv.isClosedShift,
+              paymentMethod: inv.paymentMethod,
             ))
         .toList();
   }

@@ -1,7 +1,8 @@
-﻿enum StockStatus {
+enum StockStatus {
   inStock,    // متوفر
   lowStock,   // مخزون منخفض
   outOfStock, // نفد المخزون
+  notTracked, // غير مرتبط بمخزون
 }
 
 class InventoryProductEntity {
@@ -12,6 +13,7 @@ class InventoryProductEntity {
   final String categoryName;
   final int stockQuantity;
   final int minimumStock;
+  final bool trackInventory;
 
   const InventoryProductEntity({
     required this.id,
@@ -21,9 +23,11 @@ class InventoryProductEntity {
     required this.categoryName,
     required this.stockQuantity,
     required this.minimumStock,
+    this.trackInventory = true,
   });
 
   StockStatus get status {
+    if (!trackInventory) return StockStatus.notTracked;
     if (stockQuantity <= 0) return StockStatus.outOfStock;
     if (stockQuantity <= minimumStock) return StockStatus.lowStock;
     return StockStatus.inStock;
@@ -31,6 +35,8 @@ class InventoryProductEntity {
 
   String get statusLabel {
     switch (status) {
+      case StockStatus.notTracked:
+        return '⚪ غير متتبع';
       case StockStatus.outOfStock:
         return '🔴 نفد المخزون';
       case StockStatus.lowStock:
@@ -40,5 +46,5 @@ class InventoryProductEntity {
     }
   }
 
-  bool get canSell => stockQuantity > 0;
+  bool get canSell => !trackInventory || stockQuantity > 0;
 }

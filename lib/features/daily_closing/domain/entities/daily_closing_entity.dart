@@ -9,6 +9,8 @@ class DailyClosingEntity {
   final double taxTotal;
   final double netSales;
   final double cashTotal;
+  final double walletTotal;
+  final double instapayTotal;
   final double cardTotal;
   final double otherPayments;
   final double playStationTotal;
@@ -27,6 +29,8 @@ class DailyClosingEntity {
     required this.taxTotal,
     required this.netSales,
     required this.cashTotal,
+    this.walletTotal = 0.0,
+    this.instapayTotal = 0.0,
     required this.cardTotal,
     required this.otherPayments,
     this.playStationTotal = 0.0,

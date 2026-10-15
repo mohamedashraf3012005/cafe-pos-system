@@ -20,6 +20,8 @@ class Products extends Table {
   // v6: Inventory tracking columns
   IntColumn get stockQuantity => integer().withDefault(const Constant(0))();
   IntColumn get minimumStock => integer().withDefault(const Constant(0))();
+  // v7: Whether this product tracks inventory (default true for backward compat)
+  BoolColumn get trackInventory => boolean().withDefault(const Constant(true))();
 }
 
 class Orders extends Table {
@@ -57,6 +59,17 @@ class Invoices extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+/// v7: Historical snapshot of invoice items — immune to product edits or deletions
+class InvoiceItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get invoiceId => integer().references(Invoices, #id)();
+  IntColumn get productId => integer().nullable()();
+  TextColumn get productName => text()();
+  IntColumn get quantity => integer().withDefault(const Constant(1))();
+  RealColumn get unitPrice => real()();
+  RealColumn get totalPrice => real()();
+}
+
 /// Daily Closing snapshot — one record per calendar day.
 /// Stores a frozen snapshot of the day's financials at closing time.
 class DailyClosings extends Table {
@@ -74,6 +87,9 @@ class DailyClosings extends Table {
   RealColumn get otherPayments => real().withDefault(const Constant(0.0))();
   // v6: PlayStation sales total for daily closing
   RealColumn get playStationTotal => real().withDefault(const Constant(0.0))();
+  // v7: Wallet and InstaPay totals
+  RealColumn get walletTotal => real().withDefault(const Constant(0.0))();
+  RealColumn get instapayTotal => real().withDefault(const Constant(0.0))();
   IntColumn get totalItems => integer().withDefault(const Constant(0))();
   /// 'open' or 'closed'
   TextColumn get status => text().withDefault(const Constant('closed'))();

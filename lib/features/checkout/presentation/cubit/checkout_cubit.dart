@@ -99,20 +99,19 @@ class CheckoutCubit extends Cubit<CheckoutState> {
           grandTotal,
           tableNumber,
           orderNumber,
+          paymentMethod: paymentMethod,
         );
       }
 
       final isOnline = connectivityService.isOnline;
-      final tgEnabled = telegramSettingsService?.sendInvoicesEnabled ?? true;
-      final waEnabled = settingsService.sendInvoicesEnabled;
       bool messageQueued = false;
 
       // 2. Perform Local Transaction: Stock check -> Deduct stock -> Save invoice -> Complete order
       await db.transaction(() async {
-        // Step A: Stock Check - verify all items are in stock
+        // Step A: Stock Check - verify items that track inventory are in stock
         for (final item in order.items) {
           final prod = await (db.select(db.products)..where((p) => p.id.equals(item.productId))).getSingle();
-          if (prod.stockQuantity < item.quantity) {
+          if (prod.trackInventory && prod.stockQuantity < item.quantity) {
             throw Exception('الكمية غير متوفرة في المخزون للمنتج "${prod.name}". المتاح حاليًا: ${prod.stockQuantity}');
           }
         }
@@ -131,7 +130,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
               );
         }
 
-        // Step C: Save Invoice (Cash only automatically)
+        // Step C: Save Invoice
         final invoiceId = await db.into(db.invoices).insert(
               InvoicesCompanion.insert(
                 orderId: actualOrderId,
@@ -140,16 +139,32 @@ class CheckoutCubit extends Cubit<CheckoutState> {
                 taxAmount: tax,
                 serviceCharge: serviceCharge,
                 grandTotal: grandTotal,
-                paymentMethod: const Value('cash'), // Always Cash
+                paymentMethod: Value(paymentMethod),
                 playStationAmount: Value(order.playStationCost),
                 isClosedShift: const Value(false),
                 createdAt: Value(now),
               ),
             );
 
-        // Step D: Deduct Stock and create Inventory Movements for each item
+        // Step C2: Save InvoiceItems snapshots for historical view and reprint (Mod 2)
+        for (final item in order.items) {
+          await db.into(db.invoiceItems).insert(
+                InvoiceItemsCompanion.insert(
+                  invoiceId: invoiceId,
+                  productId: Value(item.productId),
+                  productName: item.productName,
+                  quantity: Value(item.quantity),
+                  unitPrice: item.unitPrice,
+                  totalPrice: item.totalPrice,
+                ),
+              );
+        }
+
+        // Step D: Deduct Stock and create Inventory Movements for each tracked item
         for (final item in order.items) {
           final prod = await (db.select(db.products)..where((p) => p.id.equals(item.productId))).getSingle();
+          if (!prod.trackInventory) continue; // Skip products not tracked in inventory (Mod 3)
+
           final prevStock = prod.stockQuantity;
           final newStock = prevStock - item.quantity;
 
@@ -191,33 +206,37 @@ class CheckoutCubit extends Cubit<CheckoutState> {
           await orderRepository.updateOrderStatus(actualOrderId, 'completed');
         }
 
-        // Step H: Create Outbox Queue Item inside local transaction
-        if (tgEnabled || waEnabled) {
-          final payload = _formatInvoiceTelegramMessage(
-            invoiceNumber: invoiceNumber,
-            date: DateFormat('yyyy/MM/dd').format(now),
-            time: DateFormat('HH:mm').format(now),
-            items: order.items,
-            playStationCost: order.playStationCost,
-            playStationDescription: order.playStationDescription,
-            subtotal: order.subtotal,
-            tax: tax,
-            serviceCharge: serviceCharge,
-            total: grandTotal,
-            paymentMethod: 'نقدي (Cash)',
-          );
+        // Step H: Create Outbox Queue Item inside local transaction for Telegram & WhatsApp
+        final paymentMethodLabel = switch (paymentMethod) {
+          'wallet' => '📱 محفظة إلكترونية (Wallet)',
+          'instapay' => '⚡ إنستاباي (InstaPay)',
+          _ => '💵 نقدي (Cash)',
+        };
 
-          await whatsappRepository.enqueueInvoice(
-            invoiceId: invoiceId,
-            recipientPhone: settingsService.recipientPhone,
-            messagePayload: payload,
-          );
-          messageQueued = true;
-        }
+        final payload = _formatInvoiceTelegramMessage(
+          invoiceNumber: invoiceNumber,
+          date: DateFormat('yyyy/MM/dd').format(now),
+          time: DateFormat('HH:mm').format(now),
+          items: order.items,
+          playStationCost: order.playStationCost,
+          playStationDescription: order.playStationDescription,
+          subtotal: order.subtotal,
+          tax: tax,
+          serviceCharge: serviceCharge,
+          total: grandTotal,
+          paymentMethod: paymentMethodLabel,
+        );
+
+        await whatsappRepository.enqueueInvoice(
+          invoiceId: invoiceId,
+          recipientPhone: settingsService.recipientPhone,
+          messagePayload: payload,
+        );
+        messageQueued = true;
       });
 
-      // 3. Trigger Queue processor if online (asynchronous/background)
-      if (isOnline && messageQueued) {
+      // 3. Trigger Queue processor (asynchronous/background)
+      if (messageQueued) {
         queueProcessor.processQueue();
       }
 

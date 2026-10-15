@@ -1,4 +1,4 @@
-﻿import 'package:drift/drift.dart';
+import 'package:drift/drift.dart';
 import 'package:cash_cafe/core/database/app_database.dart';
 import 'package:cash_cafe/features/inventory/domain/entities/inventory_movement_entity.dart';
 import 'package:cash_cafe/features/inventory/domain/entities/inventory_product_entity.dart';
@@ -27,6 +27,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
         categoryName: c.name,
         stockQuantity: p.stockQuantity,
         minimumStock: p.minimumStock,
+        trackInventory: p.trackInventory,
       );
     }).toList();
   }
@@ -50,6 +51,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       categoryName: c.name,
       stockQuantity: p.stockQuantity,
       minimumStock: p.minimumStock,
+      trackInventory: p.trackInventory,
     );
   }
 

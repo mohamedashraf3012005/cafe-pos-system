@@ -48,14 +48,20 @@ class WhatsAppQueueProcessor {
   /// Process all pending messages sequentially.
   Future<void> processQueue() async {
     if (_isProcessing) return;
-    if (!connectivityService.isOnline) return;
+    if (!connectivityService.isOnline) {
+      final actuallyOnline = await connectivityService.checkConnection();
+      if (!actuallyOnline) return;
+    }
 
     _isProcessing = true;
 
     try {
       final pendingMessages = await whatsappRepository.getPendingMessages();
       for (final message in pendingMessages) {
-        if (!connectivityService.isOnline) break;
+        if (!connectivityService.isOnline) {
+          final actuallyOnline = await connectivityService.checkConnection();
+          if (!actuallyOnline) break;
+        }
 
         final isInvoice = message.messageType == 'invoice';
         final isClosing = message.messageType == 'daily_closing';
@@ -102,23 +108,27 @@ class WhatsAppQueueProcessor {
     try {
       await whatsappRepository.markAsSending(queueId);
 
+      bool tgSuccess = false;
       if (sendTg && telegramRemoteDataSource != null) {
         await telegramRemoteDataSource!.sendMessage(message: payload);
-        await whatsappRepository.markAsSent(queueId);
-        return true;
+        tgSuccess = true;
       }
 
+      bool waSuccess = false;
       if (sendWa) {
         await remoteDataSource.sendMessage(
           recipientPhone: recipientPhone,
           message: payload,
         );
+        waSuccess = true;
+      }
+
+      if (tgSuccess || waSuccess || (!sendTg && !sendWa)) {
         await whatsappRepository.markAsSent(queueId);
         return true;
       }
 
-      await whatsappRepository.markAsSent(queueId);
-      return true;
+      return false;
     } catch (e) {
       await whatsappRepository.markAsFailed(queueId, e.toString());
       return false;

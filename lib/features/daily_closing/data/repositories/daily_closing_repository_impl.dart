@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../whatsapp/domain/repositories/whatsapp_repository.dart';
 import '../../domain/entities/daily_closing_entity.dart';
+import '../../domain/entities/invoice_item_entity.dart';
 import '../../domain/repositories/daily_closing_repository.dart';
 
 class DailyClosingRepositoryImpl implements DailyClosingRepository {
@@ -25,6 +26,8 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
       taxTotal: row.taxTotal,
       netSales: row.netSales,
       cashTotal: row.cashTotal,
+      walletTotal: row.walletTotal,
+      instapayTotal: row.instapayTotal,
       cardTotal: row.cardTotal,
       otherPayments: row.otherPayments,
       playStationTotal: row.playStationTotal,
@@ -70,6 +73,8 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
       double taxTotal = 0.0;
       double discounts = 0.0;
       double cashTotal = 0.0;
+      double walletTotal = 0.0;
+      double instapayTotal = 0.0;
       double cardTotal = 0.0;
       double otherPayments = 0.0;
       double playStationTotal = 0.0;
@@ -83,6 +88,10 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
 
         if (inv.paymentMethod == 'cash') {
           cashTotal += inv.grandTotal;
+        } else if (inv.paymentMethod == 'wallet') {
+          walletTotal += inv.grandTotal;
+        } else if (inv.paymentMethod == 'instapay') {
+          instapayTotal += inv.grandTotal;
         } else if (inv.paymentMethod == 'card') {
           cardTotal += inv.grandTotal;
         } else {
@@ -114,6 +123,8 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
               taxTotal: Value(taxTotal),
               netSales: Value(netSales),
               cashTotal: Value(cashTotal),
+              walletTotal: Value(walletTotal),
+              instapayTotal: Value(instapayTotal),
               cardTotal: Value(cardTotal),
               otherPayments: Value(otherPayments),
               playStationTotal: Value(playStationTotal),
@@ -166,6 +177,93 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
     return row != null ? _toEntity(row) : null;
   }
 
+  @override
+  Future<List<InvoiceDetailEntity>> getInvoicesForClosingDate(String dateStr) async {
+    final parts = dateStr.split('-');
+    if (parts.length != 3) return [];
+    final year = int.tryParse(parts[0]) ?? 2026;
+    final month = int.tryParse(parts[1]) ?? 1;
+    final day = int.tryParse(parts[2]) ?? 1;
+    final startOfDay = DateTime(year, month, day);
+    final endOfDay = DateTime(year, month, day, 23, 59, 59, 999);
+
+    final invoices = await (db.select(db.invoices)
+          ..where((inv) =>
+              inv.createdAt.isBiggerOrEqualValue(startOfDay) &
+              inv.createdAt.isSmallerOrEqualValue(endOfDay))
+          ..orderBy([(inv) => OrderingTerm.desc(inv.createdAt)]))
+        .get();
+
+    final results = <InvoiceDetailEntity>[];
+    for (final inv in invoices) {
+      final details = await getInvoiceDetails(inv.id);
+      if (details != null) {
+        results.add(details);
+      }
+    }
+    return results;
+  }
+
+  @override
+  Future<InvoiceDetailEntity?> getInvoiceDetails(int invoiceId) async {
+    final inv = await (db.select(db.invoices)..where((i) => i.id.equals(invoiceId))).getSingleOrNull();
+    if (inv == null) return null;
+
+    final savedItems = await (db.select(db.invoiceItems)..where((i) => i.invoiceId.equals(invoiceId))).get();
+
+    List<InvoiceItemEntity> items;
+    if (savedItems.isNotEmpty) {
+      items = savedItems.map((item) => InvoiceItemEntity(
+        id: item.id,
+        invoiceId: item.invoiceId,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+      )).toList();
+    } else {
+      // Graceful fallback for older invoices created prior to v7 update
+      try {
+        final query = db.select(db.orderItems).join([
+          innerJoin(db.products, db.products.id.equalsExp(db.orderItems.productId)),
+        ])..where(db.orderItems.orderId.equals(inv.orderId));
+
+        final rows = await query.get();
+        items = rows.map((row) {
+          final orderItem = row.readTable(db.orderItems);
+          final product = row.readTable(db.products);
+          return InvoiceItemEntity(
+            id: orderItem.id,
+            invoiceId: invoiceId,
+            productId: orderItem.productId,
+            productName: product.name,
+            quantity: orderItem.quantity,
+            unitPrice: orderItem.unitPrice,
+            totalPrice: orderItem.totalPrice,
+          );
+        }).toList();
+      } catch (_) {
+        items = [];
+      }
+    }
+
+    return InvoiceDetailEntity(
+      id: inv.id,
+      orderId: inv.orderId,
+      invoiceNumber: inv.invoiceNumber,
+      subtotal: inv.subtotal,
+      taxAmount: inv.taxAmount,
+      serviceCharge: inv.serviceCharge,
+      grandTotal: inv.grandTotal,
+      paymentMethod: inv.paymentMethod,
+      playStationAmount: inv.playStationAmount,
+      isClosedShift: inv.isClosedShift,
+      createdAt: inv.createdAt,
+      items: items,
+    );
+  }
+
   String _formatDailyClosingMessage(DailyClosingEntity c) {
     return '''
 <b>📊 تقفيل حساب اليوم - Cafe POS</b>
@@ -184,7 +282,7 @@ ${c.playStationTotal > 0 ? '<b>🎮 مبيعات البلايستيشن:</b> ${c
 
 <b>تفاصيل طرق الدفع:</b>
 💵 <b>النقدي (Cash):</b> ${c.cashTotal.toStringAsFixed(2)} ج.م
-${c.cardTotal > 0 ? '💳 <b>بطاقة (Card):</b> ${c.cardTotal.toStringAsFixed(2)} ج.م\n' : ''}${c.otherPayments > 0 ? '📱 <b>طرق أخرى:</b> ${c.otherPayments.toStringAsFixed(2)} ج.م\n' : ''}────────────────
+${c.walletTotal > 0 ? '📱 <b>محفظة إلكترونية (Wallet):</b> ${c.walletTotal.toStringAsFixed(2)} ج.م\n' : ''}${c.instapayTotal > 0 ? '⚡ <b>إنستاباي (InstaPay):</b> ${c.instapayTotal.toStringAsFixed(2)} ج.م\n' : ''}${c.cardTotal > 0 ? '💳 <b>بطاقة (Card):</b> ${c.cardTotal.toStringAsFixed(2)} ج.م\n' : ''}${c.otherPayments > 0 ? '🔹 <b>طرق أخرى:</b> ${c.otherPayments.toStringAsFixed(2)} ج.م\n' : ''}────────────────
 <b>حالة اليوم:</b> تم إغلاق حساب اليوم بنجاح ✅
 ''';
   }

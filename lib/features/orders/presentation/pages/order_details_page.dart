@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cash_cafe/core/constants/app_colors.dart';
 import 'package:cash_cafe/core/services/printer_service.dart';
@@ -130,6 +130,34 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
       );
       Navigator.pop(context);
     }
+  }
+
+  Future<void> _handleDecreaseItemQuantity(BuildContext context, dynamic item) async {
+    final result = await showAdminPasswordDialog(
+      context,
+      title: 'تأكيد إنقاص/حذف صنف',
+      description: 'أدخل رمز المرور للموافقة على إنقاص كمية "${item.productName}".',
+      showReasonField: false,
+    );
+
+    if (result == null || !result.authenticated) return;
+    if (!context.mounted) return;
+
+    final auditService = di.sl<AuditLogService>();
+    await auditService.log(
+      username: 'مدير النظام',
+      actionType: 'decrease_order_item',
+      target: '${item.productName} (${item.quantity} -> ${item.quantity - 1})',
+      reason: result.reason.isNotEmpty ? result.reason : 'إنقاص كمية صنف من الطلب',
+    );
+
+    if (!context.mounted) return;
+    context.read<OrdersCubit>().updateQuantity(
+          widget.tableId,
+          item.id,
+          item.quantity - 1,
+          orderType: widget.isTakeaway ? 'takeaway' : 'dine_in',
+        );
   }
 
   @override
@@ -419,8 +447,8 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
   }
 
   Widget _buildProductCard(BuildContext context, ProductEntity product, OrdersLoaded state) {
-    final isOutOfStock = product.stockQuantity <= 0;
-    final isLowStock = product.stockQuantity > 0 && product.stockQuantity <= product.minimumStock;
+    final isOutOfStock = product.isOutOfStock;
+    final isLowStock = product.isLowStock;
 
     return InkWell(
       onTap: () {
@@ -438,7 +466,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
         final existingItem = state.activeOrder?.items
             .where((i) => i.productId == product.id)
             .firstOrNull;
-        if (existingItem != null && existingItem.quantity >= product.stockQuantity) {
+        if (product.trackInventory && existingItem != null && existingItem.quantity >= product.stockQuantity) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('الكمية غير متوفرة في المخزون. المتاح حاليًا: ${product.stockQuantity}'),
@@ -490,7 +518,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   ),
                   child: Text('⚠️ منخفض (${product.stockQuantity})', style: const TextStyle(color: Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                 )
-              else
+              else if (product.trackInventory)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
@@ -561,15 +589,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline,
                     color: AppColors.error, size: 20),
-                onPressed: () {
-                  context.read<OrdersCubit>().updateQuantity(
-                        widget.tableId,
-                        item.id,
-                        item.quantity - 1,
-                        orderType:
-                            widget.isTakeaway ? 'takeaway' : 'dine_in',
-                      );
-                },
+                onPressed: () => _handleDecreaseItemQuantity(context, item),
               ),
               Text('${item.quantity}',
                   style: const TextStyle(color: Colors.white, fontSize: 16)),
@@ -577,7 +597,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                 icon: const Icon(Icons.add_circle_outline,
                     color: AppColors.tableFree, size: 20),
                 onPressed: () {
-                  if (product != null && item.quantity >= product.stockQuantity) {
+                  if (product != null && product.trackInventory && item.quantity >= product.stockQuantity) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('الكمية غير متوفرة في المخزون. المتاح حاليًا: ${product.stockQuantity}'),

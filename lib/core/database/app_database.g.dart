@@ -459,9 +459,27 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _trackInventoryMeta =
+      const VerificationMeta('trackInventory');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, categoryId, price, hasAddons, stockQuantity, minimumStock];
+  late final GeneratedColumn<bool> trackInventory = GeneratedColumn<bool>(
+      'track_inventory', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("track_inventory" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        categoryId,
+        price,
+        hasAddons,
+        stockQuantity,
+        minimumStock,
+        trackInventory
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -511,6 +529,12 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
           minimumStock.isAcceptableOrUnknown(
               data['minimum_stock']!, _minimumStockMeta));
     }
+    if (data.containsKey('track_inventory')) {
+      context.handle(
+          _trackInventoryMeta,
+          trackInventory.isAcceptableOrUnknown(
+              data['track_inventory']!, _trackInventoryMeta));
+    }
     return context;
   }
 
@@ -534,6 +558,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
           .read(DriftSqlType.int, data['${effectivePrefix}stock_quantity'])!,
       minimumStock: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}minimum_stock'])!,
+      trackInventory: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}track_inventory'])!,
     );
   }
 
@@ -551,6 +577,7 @@ class Product extends DataClass implements Insertable<Product> {
   final bool hasAddons;
   final int stockQuantity;
   final int minimumStock;
+  final bool trackInventory;
   const Product(
       {required this.id,
       required this.name,
@@ -558,7 +585,8 @@ class Product extends DataClass implements Insertable<Product> {
       required this.price,
       required this.hasAddons,
       required this.stockQuantity,
-      required this.minimumStock});
+      required this.minimumStock,
+      required this.trackInventory});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -569,6 +597,7 @@ class Product extends DataClass implements Insertable<Product> {
     map['has_addons'] = Variable<bool>(hasAddons);
     map['stock_quantity'] = Variable<int>(stockQuantity);
     map['minimum_stock'] = Variable<int>(minimumStock);
+    map['track_inventory'] = Variable<bool>(trackInventory);
     return map;
   }
 
@@ -581,6 +610,7 @@ class Product extends DataClass implements Insertable<Product> {
       hasAddons: Value(hasAddons),
       stockQuantity: Value(stockQuantity),
       minimumStock: Value(minimumStock),
+      trackInventory: Value(trackInventory),
     );
   }
 
@@ -595,6 +625,7 @@ class Product extends DataClass implements Insertable<Product> {
       hasAddons: serializer.fromJson<bool>(json['hasAddons']),
       stockQuantity: serializer.fromJson<int>(json['stockQuantity']),
       minimumStock: serializer.fromJson<int>(json['minimumStock']),
+      trackInventory: serializer.fromJson<bool>(json['trackInventory']),
     );
   }
   @override
@@ -608,6 +639,7 @@ class Product extends DataClass implements Insertable<Product> {
       'hasAddons': serializer.toJson<bool>(hasAddons),
       'stockQuantity': serializer.toJson<int>(stockQuantity),
       'minimumStock': serializer.toJson<int>(minimumStock),
+      'trackInventory': serializer.toJson<bool>(trackInventory),
     };
   }
 
@@ -618,7 +650,8 @@ class Product extends DataClass implements Insertable<Product> {
           double? price,
           bool? hasAddons,
           int? stockQuantity,
-          int? minimumStock}) =>
+          int? minimumStock,
+          bool? trackInventory}) =>
       Product(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -627,6 +660,7 @@ class Product extends DataClass implements Insertable<Product> {
         hasAddons: hasAddons ?? this.hasAddons,
         stockQuantity: stockQuantity ?? this.stockQuantity,
         minimumStock: minimumStock ?? this.minimumStock,
+        trackInventory: trackInventory ?? this.trackInventory,
       );
   Product copyWithCompanion(ProductsCompanion data) {
     return Product(
@@ -642,6 +676,9 @@ class Product extends DataClass implements Insertable<Product> {
       minimumStock: data.minimumStock.present
           ? data.minimumStock.value
           : this.minimumStock,
+      trackInventory: data.trackInventory.present
+          ? data.trackInventory.value
+          : this.trackInventory,
     );
   }
 
@@ -654,14 +691,15 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('price: $price, ')
           ..write('hasAddons: $hasAddons, ')
           ..write('stockQuantity: $stockQuantity, ')
-          ..write('minimumStock: $minimumStock')
+          ..write('minimumStock: $minimumStock, ')
+          ..write('trackInventory: $trackInventory')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, name, categoryId, price, hasAddons, stockQuantity, minimumStock);
+  int get hashCode => Object.hash(id, name, categoryId, price, hasAddons,
+      stockQuantity, minimumStock, trackInventory);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -672,7 +710,8 @@ class Product extends DataClass implements Insertable<Product> {
           other.price == this.price &&
           other.hasAddons == this.hasAddons &&
           other.stockQuantity == this.stockQuantity &&
-          other.minimumStock == this.minimumStock);
+          other.minimumStock == this.minimumStock &&
+          other.trackInventory == this.trackInventory);
 }
 
 class ProductsCompanion extends UpdateCompanion<Product> {
@@ -683,6 +722,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<bool> hasAddons;
   final Value<int> stockQuantity;
   final Value<int> minimumStock;
+  final Value<bool> trackInventory;
   const ProductsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -691,6 +731,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.hasAddons = const Value.absent(),
     this.stockQuantity = const Value.absent(),
     this.minimumStock = const Value.absent(),
+    this.trackInventory = const Value.absent(),
   });
   ProductsCompanion.insert({
     this.id = const Value.absent(),
@@ -700,6 +741,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.hasAddons = const Value.absent(),
     this.stockQuantity = const Value.absent(),
     this.minimumStock = const Value.absent(),
+    this.trackInventory = const Value.absent(),
   })  : name = Value(name),
         categoryId = Value(categoryId),
         price = Value(price);
@@ -711,6 +753,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<bool>? hasAddons,
     Expression<int>? stockQuantity,
     Expression<int>? minimumStock,
+    Expression<bool>? trackInventory,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -720,6 +763,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (hasAddons != null) 'has_addons': hasAddons,
       if (stockQuantity != null) 'stock_quantity': stockQuantity,
       if (minimumStock != null) 'minimum_stock': minimumStock,
+      if (trackInventory != null) 'track_inventory': trackInventory,
     });
   }
 
@@ -730,7 +774,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       Value<double>? price,
       Value<bool>? hasAddons,
       Value<int>? stockQuantity,
-      Value<int>? minimumStock}) {
+      Value<int>? minimumStock,
+      Value<bool>? trackInventory}) {
     return ProductsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -739,6 +784,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       hasAddons: hasAddons ?? this.hasAddons,
       stockQuantity: stockQuantity ?? this.stockQuantity,
       minimumStock: minimumStock ?? this.minimumStock,
+      trackInventory: trackInventory ?? this.trackInventory,
     );
   }
 
@@ -766,6 +812,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (minimumStock.present) {
       map['minimum_stock'] = Variable<int>(minimumStock.value);
     }
+    if (trackInventory.present) {
+      map['track_inventory'] = Variable<bool>(trackInventory.value);
+    }
     return map;
   }
 
@@ -778,7 +827,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('price: $price, ')
           ..write('hasAddons: $hasAddons, ')
           ..write('stockQuantity: $stockQuantity, ')
-          ..write('minimumStock: $minimumStock')
+          ..write('minimumStock: $minimumStock, ')
+          ..write('trackInventory: $trackInventory')
           ..write(')'))
         .toString();
   }
@@ -2134,6 +2184,22 @@ class $DailyClosingsTable extends DailyClosings
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       defaultValue: const Constant(0.0));
+  static const VerificationMeta _walletTotalMeta =
+      const VerificationMeta('walletTotal');
+  @override
+  late final GeneratedColumn<double> walletTotal = GeneratedColumn<double>(
+      'wallet_total', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _instapayTotalMeta =
+      const VerificationMeta('instapayTotal');
+  @override
+  late final GeneratedColumn<double> instapayTotal = GeneratedColumn<double>(
+      'instapay_total', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
   static const VerificationMeta _totalItemsMeta =
       const VerificationMeta('totalItems');
   @override
@@ -2179,6 +2245,8 @@ class $DailyClosingsTable extends DailyClosings
         cardTotal,
         otherPayments,
         playStationTotal,
+        walletTotal,
+        instapayTotal,
         totalItems,
         status,
         createdAt,
@@ -2257,6 +2325,18 @@ class $DailyClosingsTable extends DailyClosings
           playStationTotal.isAcceptableOrUnknown(
               data['play_station_total']!, _playStationTotalMeta));
     }
+    if (data.containsKey('wallet_total')) {
+      context.handle(
+          _walletTotalMeta,
+          walletTotal.isAcceptableOrUnknown(
+              data['wallet_total']!, _walletTotalMeta));
+    }
+    if (data.containsKey('instapay_total')) {
+      context.handle(
+          _instapayTotalMeta,
+          instapayTotal.isAcceptableOrUnknown(
+              data['instapay_total']!, _instapayTotalMeta));
+    }
     if (data.containsKey('total_items')) {
       context.handle(
           _totalItemsMeta,
@@ -2308,6 +2388,10 @@ class $DailyClosingsTable extends DailyClosings
           .read(DriftSqlType.double, data['${effectivePrefix}other_payments'])!,
       playStationTotal: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}play_station_total'])!,
+      walletTotal: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}wallet_total'])!,
+      instapayTotal: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}instapay_total'])!,
       totalItems: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}total_items'])!,
       status: attachedDatabase.typeMapping
@@ -2340,6 +2424,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
   final double cardTotal;
   final double otherPayments;
   final double playStationTotal;
+  final double walletTotal;
+  final double instapayTotal;
   final int totalItems;
 
   /// 'open' or 'closed'
@@ -2359,6 +2445,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       required this.cardTotal,
       required this.otherPayments,
       required this.playStationTotal,
+      required this.walletTotal,
+      required this.instapayTotal,
       required this.totalItems,
       required this.status,
       required this.createdAt,
@@ -2378,6 +2466,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
     map['card_total'] = Variable<double>(cardTotal);
     map['other_payments'] = Variable<double>(otherPayments);
     map['play_station_total'] = Variable<double>(playStationTotal);
+    map['wallet_total'] = Variable<double>(walletTotal);
+    map['instapay_total'] = Variable<double>(instapayTotal);
     map['total_items'] = Variable<int>(totalItems);
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -2399,6 +2489,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       cardTotal: Value(cardTotal),
       otherPayments: Value(otherPayments),
       playStationTotal: Value(playStationTotal),
+      walletTotal: Value(walletTotal),
+      instapayTotal: Value(instapayTotal),
       totalItems: Value(totalItems),
       status: Value(status),
       createdAt: Value(createdAt),
@@ -2422,6 +2514,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       cardTotal: serializer.fromJson<double>(json['cardTotal']),
       otherPayments: serializer.fromJson<double>(json['otherPayments']),
       playStationTotal: serializer.fromJson<double>(json['playStationTotal']),
+      walletTotal: serializer.fromJson<double>(json['walletTotal']),
+      instapayTotal: serializer.fromJson<double>(json['instapayTotal']),
       totalItems: serializer.fromJson<int>(json['totalItems']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2444,6 +2538,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       'cardTotal': serializer.toJson<double>(cardTotal),
       'otherPayments': serializer.toJson<double>(otherPayments),
       'playStationTotal': serializer.toJson<double>(playStationTotal),
+      'walletTotal': serializer.toJson<double>(walletTotal),
+      'instapayTotal': serializer.toJson<double>(instapayTotal),
       'totalItems': serializer.toJson<int>(totalItems),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2464,6 +2560,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
           double? cardTotal,
           double? otherPayments,
           double? playStationTotal,
+          double? walletTotal,
+          double? instapayTotal,
           int? totalItems,
           String? status,
           DateTime? createdAt,
@@ -2481,6 +2579,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
         cardTotal: cardTotal ?? this.cardTotal,
         otherPayments: otherPayments ?? this.otherPayments,
         playStationTotal: playStationTotal ?? this.playStationTotal,
+        walletTotal: walletTotal ?? this.walletTotal,
+        instapayTotal: instapayTotal ?? this.instapayTotal,
         totalItems: totalItems ?? this.totalItems,
         status: status ?? this.status,
         createdAt: createdAt ?? this.createdAt,
@@ -2509,6 +2609,11 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       playStationTotal: data.playStationTotal.present
           ? data.playStationTotal.value
           : this.playStationTotal,
+      walletTotal:
+          data.walletTotal.present ? data.walletTotal.value : this.walletTotal,
+      instapayTotal: data.instapayTotal.present
+          ? data.instapayTotal.value
+          : this.instapayTotal,
       totalItems:
           data.totalItems.present ? data.totalItems.value : this.totalItems,
       status: data.status.present ? data.status.value : this.status,
@@ -2532,6 +2637,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
           ..write('cardTotal: $cardTotal, ')
           ..write('otherPayments: $otherPayments, ')
           ..write('playStationTotal: $playStationTotal, ')
+          ..write('walletTotal: $walletTotal, ')
+          ..write('instapayTotal: $instapayTotal, ')
           ..write('totalItems: $totalItems, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
@@ -2554,6 +2661,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       cardTotal,
       otherPayments,
       playStationTotal,
+      walletTotal,
+      instapayTotal,
       totalItems,
       status,
       createdAt,
@@ -2574,6 +2683,8 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
           other.cardTotal == this.cardTotal &&
           other.otherPayments == this.otherPayments &&
           other.playStationTotal == this.playStationTotal &&
+          other.walletTotal == this.walletTotal &&
+          other.instapayTotal == this.instapayTotal &&
           other.totalItems == this.totalItems &&
           other.status == this.status &&
           other.createdAt == this.createdAt &&
@@ -2593,6 +2704,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
   final Value<double> cardTotal;
   final Value<double> otherPayments;
   final Value<double> playStationTotal;
+  final Value<double> walletTotal;
+  final Value<double> instapayTotal;
   final Value<int> totalItems;
   final Value<String> status;
   final Value<DateTime> createdAt;
@@ -2610,6 +2723,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     this.cardTotal = const Value.absent(),
     this.otherPayments = const Value.absent(),
     this.playStationTotal = const Value.absent(),
+    this.walletTotal = const Value.absent(),
+    this.instapayTotal = const Value.absent(),
     this.totalItems = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2628,6 +2743,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     this.cardTotal = const Value.absent(),
     this.otherPayments = const Value.absent(),
     this.playStationTotal = const Value.absent(),
+    this.walletTotal = const Value.absent(),
+    this.instapayTotal = const Value.absent(),
     this.totalItems = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2647,6 +2764,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     Expression<double>? cardTotal,
     Expression<double>? otherPayments,
     Expression<double>? playStationTotal,
+    Expression<double>? walletTotal,
+    Expression<double>? instapayTotal,
     Expression<int>? totalItems,
     Expression<String>? status,
     Expression<DateTime>? createdAt,
@@ -2665,6 +2784,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
       if (cardTotal != null) 'card_total': cardTotal,
       if (otherPayments != null) 'other_payments': otherPayments,
       if (playStationTotal != null) 'play_station_total': playStationTotal,
+      if (walletTotal != null) 'wallet_total': walletTotal,
+      if (instapayTotal != null) 'instapay_total': instapayTotal,
       if (totalItems != null) 'total_items': totalItems,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
@@ -2685,6 +2806,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
       Value<double>? cardTotal,
       Value<double>? otherPayments,
       Value<double>? playStationTotal,
+      Value<double>? walletTotal,
+      Value<double>? instapayTotal,
       Value<int>? totalItems,
       Value<String>? status,
       Value<DateTime>? createdAt,
@@ -2702,6 +2825,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
       cardTotal: cardTotal ?? this.cardTotal,
       otherPayments: otherPayments ?? this.otherPayments,
       playStationTotal: playStationTotal ?? this.playStationTotal,
+      walletTotal: walletTotal ?? this.walletTotal,
+      instapayTotal: instapayTotal ?? this.instapayTotal,
       totalItems: totalItems ?? this.totalItems,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -2748,6 +2873,12 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     if (playStationTotal.present) {
       map['play_station_total'] = Variable<double>(playStationTotal.value);
     }
+    if (walletTotal.present) {
+      map['wallet_total'] = Variable<double>(walletTotal.value);
+    }
+    if (instapayTotal.present) {
+      map['instapay_total'] = Variable<double>(instapayTotal.value);
+    }
     if (totalItems.present) {
       map['total_items'] = Variable<int>(totalItems.value);
     }
@@ -2778,6 +2909,8 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
           ..write('cardTotal: $cardTotal, ')
           ..write('otherPayments: $otherPayments, ')
           ..write('playStationTotal: $playStationTotal, ')
+          ..write('walletTotal: $walletTotal, ')
+          ..write('instapayTotal: $instapayTotal, ')
           ..write('totalItems: $totalItems, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
@@ -4687,6 +4820,389 @@ class InventoryMovementsCompanion extends UpdateCompanion<InventoryMovement> {
   }
 }
 
+class $InvoiceItemsTable extends InvoiceItems
+    with TableInfo<$InvoiceItemsTable, InvoiceItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InvoiceItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _invoiceIdMeta =
+      const VerificationMeta('invoiceId');
+  @override
+  late final GeneratedColumn<int> invoiceId = GeneratedColumn<int>(
+      'invoice_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES invoices (id)'));
+  static const VerificationMeta _productIdMeta =
+      const VerificationMeta('productId');
+  @override
+  late final GeneratedColumn<int> productId = GeneratedColumn<int>(
+      'product_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _productNameMeta =
+      const VerificationMeta('productName');
+  @override
+  late final GeneratedColumn<String> productName = GeneratedColumn<String>(
+      'product_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _unitPriceMeta =
+      const VerificationMeta('unitPrice');
+  @override
+  late final GeneratedColumn<double> unitPrice = GeneratedColumn<double>(
+      'unit_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _totalPriceMeta =
+      const VerificationMeta('totalPrice');
+  @override
+  late final GeneratedColumn<double> totalPrice = GeneratedColumn<double>(
+      'total_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, invoiceId, productId, productName, quantity, unitPrice, totalPrice];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'invoice_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<InvoiceItem> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('invoice_id')) {
+      context.handle(_invoiceIdMeta,
+          invoiceId.isAcceptableOrUnknown(data['invoice_id']!, _invoiceIdMeta));
+    } else if (isInserting) {
+      context.missing(_invoiceIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(_productIdMeta,
+          productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta));
+    }
+    if (data.containsKey('product_name')) {
+      context.handle(
+          _productNameMeta,
+          productName.isAcceptableOrUnknown(
+              data['product_name']!, _productNameMeta));
+    } else if (isInserting) {
+      context.missing(_productNameMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    }
+    if (data.containsKey('unit_price')) {
+      context.handle(_unitPriceMeta,
+          unitPrice.isAcceptableOrUnknown(data['unit_price']!, _unitPriceMeta));
+    } else if (isInserting) {
+      context.missing(_unitPriceMeta);
+    }
+    if (data.containsKey('total_price')) {
+      context.handle(
+          _totalPriceMeta,
+          totalPrice.isAcceptableOrUnknown(
+              data['total_price']!, _totalPriceMeta));
+    } else if (isInserting) {
+      context.missing(_totalPriceMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InvoiceItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InvoiceItem(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      invoiceId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}invoice_id'])!,
+      productId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}product_id']),
+      productName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_name'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}quantity'])!,
+      unitPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}unit_price'])!,
+      totalPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}total_price'])!,
+    );
+  }
+
+  @override
+  $InvoiceItemsTable createAlias(String alias) {
+    return $InvoiceItemsTable(attachedDatabase, alias);
+  }
+}
+
+class InvoiceItem extends DataClass implements Insertable<InvoiceItem> {
+  final int id;
+  final int invoiceId;
+  final int? productId;
+  final String productName;
+  final int quantity;
+  final double unitPrice;
+  final double totalPrice;
+  const InvoiceItem(
+      {required this.id,
+      required this.invoiceId,
+      this.productId,
+      required this.productName,
+      required this.quantity,
+      required this.unitPrice,
+      required this.totalPrice});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['invoice_id'] = Variable<int>(invoiceId);
+    if (!nullToAbsent || productId != null) {
+      map['product_id'] = Variable<int>(productId);
+    }
+    map['product_name'] = Variable<String>(productName);
+    map['quantity'] = Variable<int>(quantity);
+    map['unit_price'] = Variable<double>(unitPrice);
+    map['total_price'] = Variable<double>(totalPrice);
+    return map;
+  }
+
+  InvoiceItemsCompanion toCompanion(bool nullToAbsent) {
+    return InvoiceItemsCompanion(
+      id: Value(id),
+      invoiceId: Value(invoiceId),
+      productId: productId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productId),
+      productName: Value(productName),
+      quantity: Value(quantity),
+      unitPrice: Value(unitPrice),
+      totalPrice: Value(totalPrice),
+    );
+  }
+
+  factory InvoiceItem.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InvoiceItem(
+      id: serializer.fromJson<int>(json['id']),
+      invoiceId: serializer.fromJson<int>(json['invoiceId']),
+      productId: serializer.fromJson<int?>(json['productId']),
+      productName: serializer.fromJson<String>(json['productName']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      unitPrice: serializer.fromJson<double>(json['unitPrice']),
+      totalPrice: serializer.fromJson<double>(json['totalPrice']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'invoiceId': serializer.toJson<int>(invoiceId),
+      'productId': serializer.toJson<int?>(productId),
+      'productName': serializer.toJson<String>(productName),
+      'quantity': serializer.toJson<int>(quantity),
+      'unitPrice': serializer.toJson<double>(unitPrice),
+      'totalPrice': serializer.toJson<double>(totalPrice),
+    };
+  }
+
+  InvoiceItem copyWith(
+          {int? id,
+          int? invoiceId,
+          Value<int?> productId = const Value.absent(),
+          String? productName,
+          int? quantity,
+          double? unitPrice,
+          double? totalPrice}) =>
+      InvoiceItem(
+        id: id ?? this.id,
+        invoiceId: invoiceId ?? this.invoiceId,
+        productId: productId.present ? productId.value : this.productId,
+        productName: productName ?? this.productName,
+        quantity: quantity ?? this.quantity,
+        unitPrice: unitPrice ?? this.unitPrice,
+        totalPrice: totalPrice ?? this.totalPrice,
+      );
+  InvoiceItem copyWithCompanion(InvoiceItemsCompanion data) {
+    return InvoiceItem(
+      id: data.id.present ? data.id.value : this.id,
+      invoiceId: data.invoiceId.present ? data.invoiceId.value : this.invoiceId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      productName:
+          data.productName.present ? data.productName.value : this.productName,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      totalPrice:
+          data.totalPrice.present ? data.totalPrice.value : this.totalPrice,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InvoiceItem(')
+          ..write('id: $id, ')
+          ..write('invoiceId: $invoiceId, ')
+          ..write('productId: $productId, ')
+          ..write('productName: $productName, ')
+          ..write('quantity: $quantity, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('totalPrice: $totalPrice')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, invoiceId, productId, productName, quantity, unitPrice, totalPrice);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InvoiceItem &&
+          other.id == this.id &&
+          other.invoiceId == this.invoiceId &&
+          other.productId == this.productId &&
+          other.productName == this.productName &&
+          other.quantity == this.quantity &&
+          other.unitPrice == this.unitPrice &&
+          other.totalPrice == this.totalPrice);
+}
+
+class InvoiceItemsCompanion extends UpdateCompanion<InvoiceItem> {
+  final Value<int> id;
+  final Value<int> invoiceId;
+  final Value<int?> productId;
+  final Value<String> productName;
+  final Value<int> quantity;
+  final Value<double> unitPrice;
+  final Value<double> totalPrice;
+  const InvoiceItemsCompanion({
+    this.id = const Value.absent(),
+    this.invoiceId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.productName = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.totalPrice = const Value.absent(),
+  });
+  InvoiceItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int invoiceId,
+    this.productId = const Value.absent(),
+    required String productName,
+    this.quantity = const Value.absent(),
+    required double unitPrice,
+    required double totalPrice,
+  })  : invoiceId = Value(invoiceId),
+        productName = Value(productName),
+        unitPrice = Value(unitPrice),
+        totalPrice = Value(totalPrice);
+  static Insertable<InvoiceItem> custom({
+    Expression<int>? id,
+    Expression<int>? invoiceId,
+    Expression<int>? productId,
+    Expression<String>? productName,
+    Expression<int>? quantity,
+    Expression<double>? unitPrice,
+    Expression<double>? totalPrice,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (invoiceId != null) 'invoice_id': invoiceId,
+      if (productId != null) 'product_id': productId,
+      if (productName != null) 'product_name': productName,
+      if (quantity != null) 'quantity': quantity,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (totalPrice != null) 'total_price': totalPrice,
+    });
+  }
+
+  InvoiceItemsCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? invoiceId,
+      Value<int?>? productId,
+      Value<String>? productName,
+      Value<int>? quantity,
+      Value<double>? unitPrice,
+      Value<double>? totalPrice}) {
+    return InvoiceItemsCompanion(
+      id: id ?? this.id,
+      invoiceId: invoiceId ?? this.invoiceId,
+      productId: productId ?? this.productId,
+      productName: productName ?? this.productName,
+      quantity: quantity ?? this.quantity,
+      unitPrice: unitPrice ?? this.unitPrice,
+      totalPrice: totalPrice ?? this.totalPrice,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (invoiceId.present) {
+      map['invoice_id'] = Variable<int>(invoiceId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<int>(productId.value);
+    }
+    if (productName.present) {
+      map['product_name'] = Variable<String>(productName.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (unitPrice.present) {
+      map['unit_price'] = Variable<double>(unitPrice.value);
+    }
+    if (totalPrice.present) {
+      map['total_price'] = Variable<double>(totalPrice.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InvoiceItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('invoiceId: $invoiceId, ')
+          ..write('productId: $productId, ')
+          ..write('productName: $productName, ')
+          ..write('quantity: $quantity, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('totalPrice: $totalPrice')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4704,6 +5220,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PlayStationSessionsTable(this);
   late final $InventoryMovementsTable inventoryMovements =
       $InventoryMovementsTable(this);
+  late final $InvoiceItemsTable invoiceItems = $InvoiceItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4719,7 +5236,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         whatsAppQueue,
         playStationDevices,
         playStationSessions,
-        inventoryMovements
+        inventoryMovements,
+        invoiceItems
       ];
 }
 
@@ -5231,6 +5749,7 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   Value<bool> hasAddons,
   Value<int> stockQuantity,
   Value<int> minimumStock,
+  Value<bool> trackInventory,
 });
 typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<int> id,
@@ -5240,6 +5759,7 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<bool> hasAddons,
   Value<int> stockQuantity,
   Value<int> minimumStock,
+  Value<bool> trackInventory,
 });
 
 final class $$ProductsTableReferences
@@ -5320,6 +5840,10 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<int> get minimumStock => $composableBuilder(
       column: $table.minimumStock, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get trackInventory => $composableBuilder(
+      column: $table.trackInventory,
+      builder: (column) => ColumnFilters(column));
 
   $$CategoriesTableFilterComposer get categoryId {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
@@ -5413,6 +5937,10 @@ class $$ProductsTableOrderingComposer
       column: $table.minimumStock,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get trackInventory => $composableBuilder(
+      column: $table.trackInventory,
+      builder: (column) => ColumnOrderings(column));
+
   $$CategoriesTableOrderingComposer get categoryId {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -5460,6 +5988,9 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<int> get minimumStock => $composableBuilder(
       column: $table.minimumStock, builder: (column) => column);
+
+  GeneratedColumn<bool> get trackInventory => $composableBuilder(
+      column: $table.trackInventory, builder: (column) => column);
 
   $$CategoriesTableAnnotationComposer get categoryId {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
@@ -5556,6 +6087,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<bool> hasAddons = const Value.absent(),
             Value<int> stockQuantity = const Value.absent(),
             Value<int> minimumStock = const Value.absent(),
+            Value<bool> trackInventory = const Value.absent(),
           }) =>
               ProductsCompanion(
             id: id,
@@ -5565,6 +6097,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             hasAddons: hasAddons,
             stockQuantity: stockQuantity,
             minimumStock: minimumStock,
+            trackInventory: trackInventory,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -5574,6 +6107,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<bool> hasAddons = const Value.absent(),
             Value<int> stockQuantity = const Value.absent(),
             Value<int> minimumStock = const Value.absent(),
+            Value<bool> trackInventory = const Value.absent(),
           }) =>
               ProductsCompanion.insert(
             id: id,
@@ -5583,6 +6117,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             hasAddons: hasAddons,
             stockQuantity: stockQuantity,
             minimumStock: minimumStock,
+            trackInventory: trackInventory,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>
@@ -6493,6 +7028,21 @@ final class $$InvoicesTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
+
+  static MultiTypedResultKey<$InvoiceItemsTable, List<InvoiceItem>>
+      _invoiceItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.invoiceItems,
+          aliasName:
+              $_aliasNameGenerator(db.invoices.id, db.invoiceItems.invoiceId));
+
+  $$InvoiceItemsTableProcessedTableManager get invoiceItemsRefs {
+    final manager = $$InvoiceItemsTableTableManager($_db, $_db.invoiceItems)
+        .filter((f) => f.invoiceId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_invoiceItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$InvoicesTableFilterComposer
@@ -6553,6 +7103,27 @@ class $$InvoicesTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
+  }
+
+  Expression<bool> invoiceItemsRefs(
+      Expression<bool> Function($$InvoiceItemsTableFilterComposer f) f) {
+    final $$InvoiceItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.invoiceItems,
+        getReferencedColumn: (t) => t.invoiceId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoiceItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.invoiceItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
   }
 }
 
@@ -6679,6 +7250,27 @@ class $$InvoicesTableAnnotationComposer
             ));
     return composer;
   }
+
+  Expression<T> invoiceItemsRefs<T extends Object>(
+      Expression<T> Function($$InvoiceItemsTableAnnotationComposer a) f) {
+    final $$InvoiceItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.invoiceItems,
+        getReferencedColumn: (t) => t.invoiceId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoiceItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.invoiceItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$InvoicesTableTableManager extends RootTableManager<
@@ -6692,7 +7284,7 @@ class $$InvoicesTableTableManager extends RootTableManager<
     $$InvoicesTableUpdateCompanionBuilder,
     (Invoice, $$InvoicesTableReferences),
     Invoice,
-    PrefetchHooks Function({bool orderId})> {
+    PrefetchHooks Function({bool orderId, bool invoiceItemsRefs})> {
   $$InvoicesTableTableManager(_$AppDatabase db, $InvoicesTable table)
       : super(TableManagerState(
           db: db,
@@ -6759,10 +7351,10 @@ class $$InvoicesTableTableManager extends RootTableManager<
               .map((e) =>
                   (e.readTable(table), $$InvoicesTableReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({orderId = false}) {
+          prefetchHooksCallback: ({orderId = false, invoiceItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [if (invoiceItemsRefs) db.invoiceItems],
               addJoins: <
                   T extends TableManagerState<
                       dynamic,
@@ -6790,7 +7382,21 @@ class $$InvoicesTableTableManager extends RootTableManager<
                 return state;
               },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (invoiceItemsRefs)
+                    await $_getPrefetchedData<Invoice, $InvoicesTable,
+                            InvoiceItem>(
+                        currentTable: table,
+                        referencedTable: $$InvoicesTableReferences
+                            ._invoiceItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$InvoicesTableReferences(db, table, p0)
+                                .invoiceItemsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.invoiceId == item.id),
+                        typedResults: items)
+                ];
               },
             );
           },
@@ -6808,7 +7414,7 @@ typedef $$InvoicesTableProcessedTableManager = ProcessedTableManager<
     $$InvoicesTableUpdateCompanionBuilder,
     (Invoice, $$InvoicesTableReferences),
     Invoice,
-    PrefetchHooks Function({bool orderId})>;
+    PrefetchHooks Function({bool orderId, bool invoiceItemsRefs})>;
 typedef $$DailyClosingsTableCreateCompanionBuilder = DailyClosingsCompanion
     Function({
   Value<int> id,
@@ -6823,6 +7429,8 @@ typedef $$DailyClosingsTableCreateCompanionBuilder = DailyClosingsCompanion
   Value<double> cardTotal,
   Value<double> otherPayments,
   Value<double> playStationTotal,
+  Value<double> walletTotal,
+  Value<double> instapayTotal,
   Value<int> totalItems,
   Value<String> status,
   Value<DateTime> createdAt,
@@ -6842,6 +7450,8 @@ typedef $$DailyClosingsTableUpdateCompanionBuilder = DailyClosingsCompanion
   Value<double> cardTotal,
   Value<double> otherPayments,
   Value<double> playStationTotal,
+  Value<double> walletTotal,
+  Value<double> instapayTotal,
   Value<int> totalItems,
   Value<String> status,
   Value<DateTime> createdAt,
@@ -6893,6 +7503,12 @@ class $$DailyClosingsTableFilterComposer
   ColumnFilters<double> get playStationTotal => $composableBuilder(
       column: $table.playStationTotal,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get walletTotal => $composableBuilder(
+      column: $table.walletTotal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get instapayTotal => $composableBuilder(
+      column: $table.instapayTotal, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get totalItems => $composableBuilder(
       column: $table.totalItems, builder: (column) => ColumnFilters(column));
@@ -6955,6 +7571,13 @@ class $$DailyClosingsTableOrderingComposer
       column: $table.playStationTotal,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get walletTotal => $composableBuilder(
+      column: $table.walletTotal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get instapayTotal => $composableBuilder(
+      column: $table.instapayTotal,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get totalItems => $composableBuilder(
       column: $table.totalItems, builder: (column) => ColumnOrderings(column));
 
@@ -7013,6 +7636,12 @@ class $$DailyClosingsTableAnnotationComposer
   GeneratedColumn<double> get playStationTotal => $composableBuilder(
       column: $table.playStationTotal, builder: (column) => column);
 
+  GeneratedColumn<double> get walletTotal => $composableBuilder(
+      column: $table.walletTotal, builder: (column) => column);
+
+  GeneratedColumn<double> get instapayTotal => $composableBuilder(
+      column: $table.instapayTotal, builder: (column) => column);
+
   GeneratedColumn<int> get totalItems => $composableBuilder(
       column: $table.totalItems, builder: (column) => column);
 
@@ -7064,6 +7693,8 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             Value<double> cardTotal = const Value.absent(),
             Value<double> otherPayments = const Value.absent(),
             Value<double> playStationTotal = const Value.absent(),
+            Value<double> walletTotal = const Value.absent(),
+            Value<double> instapayTotal = const Value.absent(),
             Value<int> totalItems = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7082,6 +7713,8 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             cardTotal: cardTotal,
             otherPayments: otherPayments,
             playStationTotal: playStationTotal,
+            walletTotal: walletTotal,
+            instapayTotal: instapayTotal,
             totalItems: totalItems,
             status: status,
             createdAt: createdAt,
@@ -7100,6 +7733,8 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             Value<double> cardTotal = const Value.absent(),
             Value<double> otherPayments = const Value.absent(),
             Value<double> playStationTotal = const Value.absent(),
+            Value<double> walletTotal = const Value.absent(),
+            Value<double> instapayTotal = const Value.absent(),
             Value<int> totalItems = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7118,6 +7753,8 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             cardTotal: cardTotal,
             otherPayments: otherPayments,
             playStationTotal: playStationTotal,
+            walletTotal: walletTotal,
+            instapayTotal: instapayTotal,
             totalItems: totalItems,
             status: status,
             createdAt: createdAt,
@@ -8453,6 +9090,305 @@ typedef $$InventoryMovementsTableProcessedTableManager = ProcessedTableManager<
     (InventoryMovement, $$InventoryMovementsTableReferences),
     InventoryMovement,
     PrefetchHooks Function({bool productId})>;
+typedef $$InvoiceItemsTableCreateCompanionBuilder = InvoiceItemsCompanion
+    Function({
+  Value<int> id,
+  required int invoiceId,
+  Value<int?> productId,
+  required String productName,
+  Value<int> quantity,
+  required double unitPrice,
+  required double totalPrice,
+});
+typedef $$InvoiceItemsTableUpdateCompanionBuilder = InvoiceItemsCompanion
+    Function({
+  Value<int> id,
+  Value<int> invoiceId,
+  Value<int?> productId,
+  Value<String> productName,
+  Value<int> quantity,
+  Value<double> unitPrice,
+  Value<double> totalPrice,
+});
+
+final class $$InvoiceItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $InvoiceItemsTable, InvoiceItem> {
+  $$InvoiceItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $InvoicesTable _invoiceIdTable(_$AppDatabase db) =>
+      db.invoices.createAlias(
+          $_aliasNameGenerator(db.invoiceItems.invoiceId, db.invoices.id));
+
+  $$InvoicesTableProcessedTableManager get invoiceId {
+    final $_column = $_itemColumn<int>('invoice_id')!;
+
+    final manager = $$InvoicesTableTableManager($_db, $_db.invoices)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_invoiceIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$InvoiceItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $InvoiceItemsTable> {
+  $$InvoiceItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get productId => $composableBuilder(
+      column: $table.productId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productName => $composableBuilder(
+      column: $table.productName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitPrice => $composableBuilder(
+      column: $table.unitPrice, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get totalPrice => $composableBuilder(
+      column: $table.totalPrice, builder: (column) => ColumnFilters(column));
+
+  $$InvoicesTableFilterComposer get invoiceId {
+    final $$InvoicesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.invoiceId,
+        referencedTable: $db.invoices,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoicesTableFilterComposer(
+              $db: $db,
+              $table: $db.invoices,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$InvoiceItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $InvoiceItemsTable> {
+  $$InvoiceItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get productId => $composableBuilder(
+      column: $table.productId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productName => $composableBuilder(
+      column: $table.productName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get unitPrice => $composableBuilder(
+      column: $table.unitPrice, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get totalPrice => $composableBuilder(
+      column: $table.totalPrice, builder: (column) => ColumnOrderings(column));
+
+  $$InvoicesTableOrderingComposer get invoiceId {
+    final $$InvoicesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.invoiceId,
+        referencedTable: $db.invoices,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoicesTableOrderingComposer(
+              $db: $db,
+              $table: $db.invoices,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$InvoiceItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InvoiceItemsTable> {
+  $$InvoiceItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get productId =>
+      $composableBuilder(column: $table.productId, builder: (column) => column);
+
+  GeneratedColumn<String> get productName => $composableBuilder(
+      column: $table.productName, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get unitPrice =>
+      $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get totalPrice => $composableBuilder(
+      column: $table.totalPrice, builder: (column) => column);
+
+  $$InvoicesTableAnnotationComposer get invoiceId {
+    final $$InvoicesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.invoiceId,
+        referencedTable: $db.invoices,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoicesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.invoices,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$InvoiceItemsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $InvoiceItemsTable,
+    InvoiceItem,
+    $$InvoiceItemsTableFilterComposer,
+    $$InvoiceItemsTableOrderingComposer,
+    $$InvoiceItemsTableAnnotationComposer,
+    $$InvoiceItemsTableCreateCompanionBuilder,
+    $$InvoiceItemsTableUpdateCompanionBuilder,
+    (InvoiceItem, $$InvoiceItemsTableReferences),
+    InvoiceItem,
+    PrefetchHooks Function({bool invoiceId})> {
+  $$InvoiceItemsTableTableManager(_$AppDatabase db, $InvoiceItemsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InvoiceItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InvoiceItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InvoiceItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> invoiceId = const Value.absent(),
+            Value<int?> productId = const Value.absent(),
+            Value<String> productName = const Value.absent(),
+            Value<int> quantity = const Value.absent(),
+            Value<double> unitPrice = const Value.absent(),
+            Value<double> totalPrice = const Value.absent(),
+          }) =>
+              InvoiceItemsCompanion(
+            id: id,
+            invoiceId: invoiceId,
+            productId: productId,
+            productName: productName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalPrice: totalPrice,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int invoiceId,
+            Value<int?> productId = const Value.absent(),
+            required String productName,
+            Value<int> quantity = const Value.absent(),
+            required double unitPrice,
+            required double totalPrice,
+          }) =>
+              InvoiceItemsCompanion.insert(
+            id: id,
+            invoiceId: invoiceId,
+            productId: productId,
+            productName: productName,
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalPrice: totalPrice,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$InvoiceItemsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({invoiceId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (invoiceId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.invoiceId,
+                    referencedTable:
+                        $$InvoiceItemsTableReferences._invoiceIdTable(db),
+                    referencedColumn:
+                        $$InvoiceItemsTableReferences._invoiceIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$InvoiceItemsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $InvoiceItemsTable,
+    InvoiceItem,
+    $$InvoiceItemsTableFilterComposer,
+    $$InvoiceItemsTableOrderingComposer,
+    $$InvoiceItemsTableAnnotationComposer,
+    $$InvoiceItemsTableCreateCompanionBuilder,
+    $$InvoiceItemsTableUpdateCompanionBuilder,
+    (InvoiceItem, $$InvoiceItemsTableReferences),
+    InvoiceItem,
+    PrefetchHooks Function({bool invoiceId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8479,4 +9415,6 @@ class $AppDatabaseManager {
       $$PlayStationSessionsTableTableManager(_db, _db.playStationSessions);
   $$InventoryMovementsTableTableManager get inventoryMovements =>
       $$InventoryMovementsTableTableManager(_db, _db.inventoryMovements);
+  $$InvoiceItemsTableTableManager get invoiceItems =>
+      $$InvoiceItemsTableTableManager(_db, _db.invoiceItems);
 }
