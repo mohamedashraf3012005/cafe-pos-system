@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/invoice_details_dialog.dart';
+import '../../../../core/widgets/cashier_report_dialog.dart';
 import '../../../../injection_container.dart' as di;
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../daily_closing/presentation/cubit/daily_closing_cubit.dart';
@@ -76,12 +77,94 @@ class _DailyReportView extends StatelessWidget {
     }
   }
 
+  Future<void> _openCashierReport(BuildContext context, {DateTime? date}) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final report = await context.read<DailyReportCubit>().getCashierReport(date: date);
+      if (context.mounted) {
+        Navigator.pop(context);
+        await showCashierReportDialog(context, report);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ أثناء إنشاء تقرير الكاشير: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickDateAndOpenCashierReport(BuildContext context) async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      helpText: 'اختر تاريخ يومية التقرير',
+      cancelText: 'إلغاء',
+      confirmText: 'عرض التقرير',
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primary,
+              surface: AppColors.surface,
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null && context.mounted) {
+      await _openCashierReport(context, date: pickedDate);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('تقرير اليومية وتقفيل اليوم'),
         actions: [
+          ElevatedButton.icon(
+            icon: const Icon(Icons.assessment, color: Colors.white, size: 18),
+            label: const Text(
+              'تقرير الكاشير 📋',
+              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => _openCashierReport(context),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.date_range_rounded, color: AppColors.secondary, size: 18),
+            label: const Text(
+              'تقرير تاريخ سابق 📅',
+              style: TextStyle(color: AppColors.secondary, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.secondary),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => _pickDateAndOpenCashierReport(context),
+          ),
+          const SizedBox(width: 8),
           TextButton.icon(
             icon: const Icon(Icons.history, color: AppColors.secondary, size: 18),
             label: const Text(
@@ -219,10 +302,28 @@ class _DailyReportView extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
 
-                          // ── Transactions List ───────────────────────────────────
-                          const Text(
-                            'معاملات الوردية الحالية (اضغط لعرض الأصناف وإعادة الطباعة)',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          // ── Transactions List Header & Cashier Report Button ────
+                          Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'معاملات الوردية الحالية (اضغط لعرض الأصناف وإعادة الطباعة)',
+                                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.assessment, color: Colors.white, size: 16),
+                                label: const Text(
+                                  'تقرير الكاشير 📋',
+                                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () => _openCashierReport(context),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 10),
                           Expanded(

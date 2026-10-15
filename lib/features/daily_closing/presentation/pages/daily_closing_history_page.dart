@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/invoice_details_dialog.dart';
+import '../../../../core/widgets/cashier_report_dialog.dart';
+import '../../../reports/domain/repositories/daily_report_repository.dart';
 import '../../../../injection_container.dart' as di;
 import '../../domain/entities/daily_closing_entity.dart';
 import '../../domain/entities/invoice_item_entity.dart';
@@ -22,6 +24,33 @@ class DailyClosingHistoryPage extends StatelessWidget {
 
 class _DailyClosingHistoryView extends StatelessWidget {
   const _DailyClosingHistoryView();
+
+  Future<void> _openCashierReportForDate(BuildContext context, String dateStr) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final repo = di.sl<DailyReportRepository>();
+      final report = await repo.getCashierReport(dateStr: dateStr);
+      if (context.mounted) {
+        Navigator.pop(context);
+        await showCashierReportDialog(context, report);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('خطأ أثناء إنشاء تقرير الكاشير لهذا اليوم: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
 
   void _showClosingDetails(BuildContext context, DailyClosingEntity closing) {
     showDialog(
@@ -77,6 +106,19 @@ class _DailyClosingHistoryView extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('إغلاق', style: TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.assessment_rounded, size: 18),
+            label: const Text('تقرير الكاشير (طباعة وتيليجرام) 📋', style: TextStyle(fontWeight: FontWeight.bold)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _openCashierReportForDate(context, closing.closingDate);
+            },
           ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -298,7 +340,24 @@ class _DailyClosingHistoryView extends StatelessWidget {
                       ],
                     ),
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        icon: const Icon(Icons.assessment, size: 16),
+                        label: const Text('تقرير الكاشير 📋', style: TextStyle(fontSize: 12)),
+                        onPressed: () => _openCashierReportForDate(context, closing.closingDate),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
+                    ],
+                  ),
                   onTap: () => _showClosingDetails(context, closing),
                   ),
                 );

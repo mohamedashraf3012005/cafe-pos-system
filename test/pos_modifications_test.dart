@@ -4,6 +4,7 @@ import 'package:cash_cafe/features/inventory/domain/entities/inventory_product_e
 import 'package:cash_cafe/features/daily_closing/domain/entities/invoice_item_entity.dart';
 import 'package:cash_cafe/features/daily_closing/domain/entities/daily_closing_entity.dart';
 import 'package:cash_cafe/features/reports/domain/entities/invoice_report_entity.dart';
+import 'package:cash_cafe/features/reports/domain/entities/cashier_report_entity.dart';
 
 void main() {
   group('Mod 3: Track Inventory Logic Tests', () {
@@ -207,6 +208,94 @@ void main() {
       expect(getPaymentMethodLabel('cash'), contains('نقدي'));
       expect(getPaymentMethodLabel('wallet'), contains('محفظة'));
       expect(getPaymentMethodLabel('instapay'), contains('إنستاباي'));
+    });
+  });
+
+  group('Cashier Report (تقرير الكاشير ومبيعات الأصناف) Tests', () {
+    test('CashierReportEntity properly aggregates items sold and payment totals', () {
+      final now = DateTime.now();
+      final report = CashierReportEntity(
+        date: now,
+        invoiceCount: 20,
+        totalRevenue: 1500.0,
+        cashTotal: 1000.0,
+        walletTotal: 300.0,
+        instapayTotal: 200.0,
+        cardTotal: 0.0,
+        playStationTotal: 150.0,
+        playStationCount: 2,
+        totalQuantitySold: 42,
+        items: const [
+          CashierReportItemEntity(
+            productName: 'قهوة تركي',
+            quantity: 20,
+            unitPrice: 25.0,
+            totalPrice: 500.0,
+          ),
+          CashierReportItemEntity(
+            productName: 'شاي فتلة',
+            quantity: 12,
+            unitPrice: 15.0,
+            totalPrice: 180.0,
+          ),
+          CashierReportItemEntity(
+            productName: 'مياه معدنية',
+            quantity: 10,
+            unitPrice: 10.0,
+            totalPrice: 100.0,
+          ),
+        ],
+      );
+
+      expect(report.invoiceCount, equals(20));
+      expect(report.totalRevenue, equals(1500.0));
+      expect(report.cashTotal, equals(1000.0));
+      expect(report.walletTotal, equals(300.0));
+      expect(report.instapayTotal, equals(200.0));
+      expect(report.totalQuantitySold, equals(42));
+      expect(report.items.length, equals(3));
+      expect(report.items.first.productName, equals('قهوة تركي'));
+      expect(report.items.first.quantity, equals(20));
+      expect(report.items[1].quantity, equals(12));
+      expect(report.items[2].quantity, equals(10));
+    });
+
+    test('CashierReportEntity supports historical closed days with accurate totals', () {
+      final pastDate = DateTime(2026, 10, 14);
+      final report = CashierReportEntity(
+        date: pastDate,
+        invoiceCount: 15,
+        totalRevenue: 1200.0,
+        cashTotal: 800.0,
+        walletTotal: 250.0,
+        instapayTotal: 150.0,
+        cardTotal: 0.0,
+        playStationTotal: 0.0,
+        playStationCount: 0,
+        totalQuantitySold: 25,
+        items: const [
+          CashierReportItemEntity(
+            productName: 'اسبريسو دبل',
+            quantity: 15,
+            unitPrice: 40.0,
+            totalPrice: 600.0,
+          ),
+          CashierReportItemEntity(
+            productName: 'كابتشينو',
+            quantity: 10,
+            unitPrice: 60.0,
+            totalPrice: 600.0,
+          ),
+        ],
+      );
+
+      expect(report.date, equals(pastDate));
+      expect(report.totalRevenue, equals(1200.0));
+      expect(report.items.length, equals(2));
+      expect(report.items[0].productName, equals('اسبريسو دبل'));
+      expect(report.items[0].quantity, equals(15));
+      expect(report.items[1].productName, equals('كابتشينو'));
+      expect(report.items[1].quantity, equals(10));
     });
   });
 }

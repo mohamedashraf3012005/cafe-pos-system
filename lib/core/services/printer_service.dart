@@ -4,6 +4,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../features/orders/domain/entities/order_entity.dart';
 import '../../features/daily_closing/domain/entities/invoice_item_entity.dart';
+import '../../features/reports/domain/entities/cashier_report_entity.dart';
 
 class PrinterService {
   // Cache the selected printer once per session
@@ -648,6 +649,169 @@ class PrinterService {
     );
 
     await _sendToPrinter(doc, 'Kitchen_${_formatTime(now).replaceAll(':', '')}');
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CASHIER SHIFT REPORT (80mm Thermal Receipt)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  Future<void> printCashierReport(CashierReportEntity report) async {
+    await _loadFonts();
+    final baseFont = _cachedArabicFont!;
+    final boldFont = _cachedArabicBoldFont!;
+    final now = DateTime.now();
+
+    final doc = pw.Document();
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: _receiptFormat,
+        textDirection: pw.TextDirection.rtl,
+        theme: pw.ThemeData.withFont(base: baseFont, bold: boldFont),
+        build: (pw.Context ctx) {
+          return pw.Padding(
+            padding: pw.EdgeInsets.zero,
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+              children: [
+                _decorativeLine(),
+                pw.SizedBox(height: 3),
+                pw.Center(
+                  child: pw.Text('بريسكا كافيه',
+                      style: pw.TextStyle(font: boldFont, fontSize: 14)),
+                ),
+                pw.SizedBox(height: 1),
+                pw.Center(
+                  child: pw.Text('تقرير مبيعات الكاشير',
+                      style: pw.TextStyle(font: boldFont, fontSize: 12)),
+                ),
+                pw.SizedBox(height: 3),
+                _decorativeLine(),
+                pw.SizedBox(height: 4),
+
+                _infoRow('التاريخ:', _formatDate(report.date), baseFont),
+                _infoRow('وقت الطباعة:', _formatTime(now), baseFont),
+                _infoRow('عدد الفواتير:', '${report.invoiceCount} فاتورة', baseFont),
+                pw.SizedBox(height: 4),
+                _thickDivider(),
+                pw.SizedBox(height: 4),
+
+                pw.Text('ملخص طرق الدفع:',
+                    style: pw.TextStyle(font: boldFont, fontSize: 10)),
+                pw.SizedBox(height: 2),
+                _amountRow('💵 نقدي (Cash):', report.cashTotal, baseFont),
+                _amountRow('📱 محفظة (Wallet):', report.walletTotal, baseFont),
+                _amountRow('⚡ إنستاباي (InstaPay):', report.instapayTotal, baseFont),
+                if (report.cardTotal > 0)
+                  _amountRow('💳 بطاقة (Card):', report.cardTotal, baseFont),
+                pw.SizedBox(height: 3),
+                _thinDivider(),
+                pw.SizedBox(height: 3),
+                _amountRow('إجمالي المبيعات:', report.totalRevenue, boldFont),
+                pw.SizedBox(height: 4),
+                _thickDivider(),
+                pw.SizedBox(height: 4),
+
+                pw.Text('تفاصيل الأصناف المباعة (${report.totalQuantitySold} قطعة):',
+                    style: pw.TextStyle(font: boldFont, fontSize: 10)),
+                pw.SizedBox(height: 3),
+
+                // Table Header
+                pw.Row(
+                  children: [
+                    pw.Expanded(
+                      flex: 5,
+                      child: pw.Text('الصنف',
+                          style: pw.TextStyle(font: boldFont, fontSize: 9)),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text('الكمية',
+                          style: pw.TextStyle(font: boldFont, fontSize: 9),
+                          textAlign: pw.TextAlign.center),
+                    ),
+                    pw.Expanded(
+                      flex: 3,
+                      child: pw.Text('الإجمالي',
+                          style: pw.TextStyle(font: boldFont, fontSize: 9),
+                          textAlign: pw.TextAlign.left),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 2),
+                _thinDivider(),
+                pw.SizedBox(height: 2),
+
+                // Items list
+                if (report.items.isEmpty)
+                  pw.Center(
+                    child: pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                      child: pw.Text('لا توجد مبيعات أصناف مسجلة',
+                          style: pw.TextStyle(font: baseFont, fontSize: 9)),
+                    ),
+                  )
+                else
+                  ...report.items.map((item) {
+                    return pw.Padding(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 1.5),
+                      child: pw.Row(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Expanded(
+                            flex: 5,
+                            child: pw.Text(
+                              item.productName,
+                              style: pw.TextStyle(font: baseFont, fontSize: 9),
+                              softWrap: true,
+                            ),
+                          ),
+                          pw.Expanded(
+                            flex: 2,
+                            child: pw.Text(
+                              '${item.quantity}',
+                              style: pw.TextStyle(font: baseFont, fontSize: 9),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                          ),
+                          pw.Expanded(
+                            flex: 3,
+                            child: pw.Text(
+                              item.totalPrice.toStringAsFixed(2),
+                              style: pw.TextStyle(font: baseFont, fontSize: 9),
+                              textAlign: pw.TextAlign.left,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                // PlayStation Summary if any
+                if (report.playStationTotal > 0) ...[
+                  pw.SizedBox(height: 3),
+                  _thinDivider(),
+                  pw.SizedBox(height: 3),
+                  _amountRow('🎮 دخل البلايستيشن (${report.playStationCount} جلسة):',
+                      report.playStationTotal, baseFont),
+                ],
+
+                pw.SizedBox(height: 6),
+                _decorativeLine(),
+                pw.SizedBox(height: 3),
+                pw.Center(
+                  child: pw.Text('نظام كاشير بريسكا كافيه',
+                      style: pw.TextStyle(font: baseFont, fontSize: 8)),
+                ),
+                pw.SizedBox(height: 8),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    await _sendToPrinter(doc, 'CashierReport_${_formatTime(now).replaceAll(':', '')}');
   }
 
   // ─────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/invoice_report_entity.dart';
+import '../../domain/entities/cashier_report_entity.dart';
 import '../../domain/repositories/daily_report_repository.dart';
 
 // ── States ────────────────────────────────────────────────────────────────────
@@ -64,4 +65,7 @@ class DailyReportCubit extends Cubit<DailyReportState> {
       emit(DailyReportError(e.toString()));
     }
   }
+
+  Future<CashierReportEntity> getCashierReport({DateTime? date, String? dateStr}) =>
+      repository.getCashierReport(date: date, dateStr: dateStr);
 }
