@@ -67,7 +67,7 @@ class DailyClosingCubit extends Cubit<DailyClosingState> {
   Future<void> addExpense(double amount, String reason) async {
     try {
       await dailyClosingRepository.addExpense(amount, reason);
-      emit(const ExpenseOperationSuccess('تم تسجيل المصروف بنجاح.'));
+      emit(ExpenseOperationSuccess('تم تسجيل مصروف ($reason) بمبلغ ${amount.toStringAsFixed(2)} ج.م بنجاح.'));
     } catch (e) {
       emit(DailyClosingError(e.toString().replaceAll('Exception: ', '')));
     }

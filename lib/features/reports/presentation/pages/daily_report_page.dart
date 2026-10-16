@@ -91,10 +91,10 @@ class _DailyReportViewState extends State<_DailyReportView> {
 
     final presets = ['شراء بن', 'شراء ثلج', 'مستلزمات نظافة', 'صيانة', 'خامات ومشتريات', 'أخرى'];
 
-    await showDialog(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (dialogCtx) => StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (dialogContext, setDialogState) {
           return AlertDialog(
             backgroundColor: AppColors.surface,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -197,7 +197,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                onPressed: () async {
+                onPressed: () {
                   final amountText = amountController.text.trim();
                   final reason = reasonController.text.trim();
                   final amount = double.tryParse(amountText);
@@ -211,17 +211,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
                     return;
                   }
 
-                  Navigator.pop(dialogCtx);
-                  await context.read<DailyClosingCubit>().addExpense(amount, reason);
-                  if (context.mounted) {
-                    context.read<DailyReportCubit>().loadReport();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('تم تسجيل مصروف ($reason) بمبلغ ${amount.toStringAsFixed(2)} ج.م بنجاح'),
-                        backgroundColor: AppColors.tableFree,
-                      ),
-                    );
-                  }
+                  Navigator.pop(dialogCtx, {'amount': amount, 'reason': reason});
                 },
               ),
             ],
@@ -229,6 +219,31 @@ class _DailyReportViewState extends State<_DailyReportView> {
         },
       ),
     );
+
+    if (result != null && mounted) {
+      final double amount = result['amount'] as double;
+      final String reason = result['reason'] as String;
+
+      setState(() {
+        _selectedTab = 1; // الانتقال لتبويب المصروفات فوراً لرؤية المصروف المسجل
+      });
+
+      try {
+        await this.context.read<DailyClosingCubit>().addExpense(amount, reason);
+        if (mounted) {
+          await this.context.read<DailyReportCubit>().loadReport();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(this.context).showSnackBar(
+            SnackBar(
+              content: Text('حدث خطأ أثناء حفظ المصروف: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _confirmDeleteExpense(BuildContext context, int expenseId, String reason) async {
@@ -255,16 +270,21 @@ class _DailyReportViewState extends State<_DailyReportView> {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
-      await context.read<DailyClosingCubit>().deleteExpense(expenseId);
-      if (context.mounted) {
-        context.read<DailyReportCubit>().loadReport();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم حذف المصروف بنجاح'),
-            backgroundColor: AppColors.tableFree,
-          ),
-        );
+    if (confirmed == true && mounted) {
+      try {
+        await this.context.read<DailyClosingCubit>().deleteExpense(expenseId);
+        if (mounted) {
+          await this.context.read<DailyReportCubit>().loadReport();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(this.context).showSnackBar(
+            SnackBar(
+              content: Text('حدث خطأ أثناء حذف المصروف: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
       }
     }
   }
@@ -457,7 +477,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ── Total Revenue Card ──────────────────────────────────
+                    // ── Financial Summary Card ──────────────────────────────────
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -467,24 +487,81 @@ class _DailyReportViewState extends State<_DailyReportView> {
                       ),
                       child: Column(
                         children: [
-                          const Text(
-                            'مجموع إيرادات مبيعات الوردية الحالية',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${state.totalRevenue.toStringAsFixed(2)} ج.م',
-                            style: const TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
+                          if (state.totalExpenses > 0) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        '💰 صافي الإيراد (بعد المصروفات)',
+                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${state.netRevenue.toStringAsFixed(2)} ج.م',
+                                        style: const TextStyle(
+                                          color: AppColors.secondary,
+                                          fontSize: 34,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'المبيعات: ${state.totalRevenue.toStringAsFixed(2)} - المصروفات: ${state.totalExpenses.toStringAsFixed(2)}',
+                                        style: const TextStyle(color: Colors.white38, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(width: 1, height: 75, color: Colors.white12),
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        '💵 صافي النقدية بالدرج',
+                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${netCashInDrawer.toStringAsFixed(2)} ج.م',
+                                        style: const TextStyle(
+                                          color: AppColors.tableFree,
+                                          fontSize: 34,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'كاش المبيعات: ${cashTotal.toStringAsFixed(2)} - المصروفات: ${state.totalExpenses.toStringAsFixed(2)}',
+                                        style: const TextStyle(color: Colors.white38, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${state.invoices.length} فاتورة مسجلة بهذه الوردية',
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                          ),
+                          ] else ...[
+                            const Text(
+                              'مجموع إيرادات مبيعات الوردية الحالية',
+                              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${state.totalRevenue.toStringAsFixed(2)} ج.م',
+                              style: const TextStyle(
+                                color: AppColors.secondary,
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              '${state.invoices.length} فاتورة مسجلة بهذه الوردية',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            ),
+                          ],
                           const SizedBox(height: 14),
                           const Divider(color: Colors.white12, height: 1),
                           const SizedBox(height: 12),
@@ -497,23 +574,12 @@ class _DailyReportViewState extends State<_DailyReportView> {
                               _buildPaymentSummaryItem('📱 محفظة (Wallet)', walletTotal, Colors.deepPurpleAccent),
                               Container(width: 1, height: 30, color: Colors.white12),
                               _buildPaymentSummaryItem('⚡ إنستاباي (InstaPay)', instapayTotal, Colors.amber),
+                              if (state.totalExpenses > 0) ...[
+                                Container(width: 1, height: 30, color: Colors.white12),
+                                _buildPaymentSummaryItem('💸 إجمالي المصروفات', state.totalExpenses, Colors.redAccent, isNegative: true),
+                              ],
                             ],
                           ),
-                          if (state.totalExpenses > 0) ...[
-                            const SizedBox(height: 12),
-                            const Divider(color: Colors.white12, height: 1),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildPaymentSummaryItem('💸 إجمالي المصروفات', state.totalExpenses, Colors.redAccent),
-                                Container(width: 1, height: 30, color: Colors.white12),
-                                _buildPaymentSummaryItem('💵 صافي النقدية بالدرج', netCashInDrawer, AppColors.tableFree),
-                                Container(width: 1, height: 30, color: Colors.white12),
-                                _buildPaymentSummaryItem('💰 صافي الإيراد', state.netRevenue, AppColors.secondary),
-                              ],
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -807,7 +873,10 @@ class _DailyReportViewState extends State<_DailyReportView> {
     );
   }
 
-  Widget _buildPaymentSummaryItem(String label, double amount, Color color) {
+  Widget _buildPaymentSummaryItem(String label, double amount, Color color, {bool isNegative = false}) {
+    final formatted = isNegative
+        ? '- ${amount.abs().toStringAsFixed(2)} ج.م'
+        : '${amount.toStringAsFixed(2)} ج.م';
     return Column(
       children: [
         Text(
@@ -816,7 +885,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
         ),
         const SizedBox(height: 4),
         Text(
-          '${amount.toStringAsFixed(2)} ج.م',
+          formatted,
           style: TextStyle(
             color: color,
             fontSize: 15,
