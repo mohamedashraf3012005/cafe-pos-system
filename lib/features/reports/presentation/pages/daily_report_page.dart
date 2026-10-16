@@ -26,8 +26,15 @@ class DailyReportPage extends StatelessWidget {
   }
 }
 
-class _DailyReportView extends StatelessWidget {
+class _DailyReportView extends StatefulWidget {
   const _DailyReportView();
+
+  @override
+  State<_DailyReportView> createState() => _DailyReportViewState();
+}
+
+class _DailyReportViewState extends State<_DailyReportView> {
+  int _selectedTab = 0; // 0: Invoices, 1: Expenses
 
   Future<void> _showChangePasswordDialog(BuildContext context) async {
     final success = await showDialog<bool>(
@@ -51,11 +58,11 @@ class _DailyReportView extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text(
-          'تأكيد تقفيل حساب اليوم',
-          style: TextStyle(color: Colors.white),
+          'تأكيد تقفيل الوردية',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: const Text(
-          'هل أنت متأكد من تقفيل حساب اليوم؟\nسيتم إغلاق حساب اليوم وإنشاء التقرير المحفوظ وحفظه محليًا.',
+          'هل أنت متأكد من تقفيل الوردية الحالية؟\nسيتم إغلاق الوردية وحساب المبيعات والمصروفات بدقة بالوقت والتاريخ وحفظها محليًا وإرسال التقرير.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         actions: [
@@ -66,14 +73,199 @@ class _DailyReportView extends StatelessWidget {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('نعم، تقفيل اليوم', style: TextStyle(color: Colors.white)),
+            child: const Text('نعم، تقفيل الوردية', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
 
     if (confirmed == true && context.mounted) {
-      context.read<DailyClosingCubit>().closeDay();
+      context.read<DailyClosingCubit>().closeShift();
+    }
+  }
+
+  Future<void> _showAddExpenseDialog(BuildContext context) async {
+    final amountController = TextEditingController();
+    final reasonController = TextEditingController();
+    String? localError;
+
+    final presets = ['شراء بن', 'شراء ثلج', 'مستلزمات نظافة', 'صيانة', 'خامات ومشتريات', 'أخرى'];
+
+    await showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withAlpha(40),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.payments_rounded, color: Colors.amber, size: 24),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'إضافة مصروف للوردية',
+                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: 440,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'أدخل قيمة المصروف وسبب الصرف، وسيتم خصمها من نقدية الدرج وحفظها في تقرير الوردية.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      decoration: InputDecoration(
+                        labelText: 'المبلغ (ج.م) *',
+                        labelStyle: const TextStyle(color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.attach_money, color: Colors.amber),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: reasonController,
+                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                      decoration: InputDecoration(
+                        labelText: 'سبب المصروف / ملاحظة *',
+                        labelStyle: const TextStyle(color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.notes_rounded, color: AppColors.primary),
+                        hintText: 'مثال: شراء بن، ثلج، صيانة، نظافة...',
+                        hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: presets.map((preset) {
+                        return ActionChip(
+                          backgroundColor: Colors.white10,
+                          side: BorderSide.none,
+                          label: Text(preset, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                          onPressed: () {
+                            setDialogState(() {
+                              reasonController.text = preset;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    if (localError != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        localError!,
+                        style: const TextStyle(color: AppColors.error, fontSize: 12),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('إلغاء', style: TextStyle(color: AppColors.textSecondary)),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.check, size: 18),
+                label: const Text('حفظ المصروف 💸', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD97706),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () async {
+                  final amountText = amountController.text.trim();
+                  final reason = reasonController.text.trim();
+                  final amount = double.tryParse(amountText);
+
+                  if (amount == null || amount <= 0) {
+                    setDialogState(() => localError = 'يرجى إدخال مبلغ صحيح أكبر من صفر');
+                    return;
+                  }
+                  if (reason.isEmpty) {
+                    setDialogState(() => localError = 'يرجى إدخال سبب المصروف');
+                    return;
+                  }
+
+                  Navigator.pop(dialogCtx);
+                  await context.read<DailyClosingCubit>().addExpense(amount, reason);
+                  if (context.mounted) {
+                    context.read<DailyReportCubit>().loadReport();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('تم تسجيل مصروف ($reason) بمبلغ ${amount.toStringAsFixed(2)} ج.م بنجاح'),
+                        backgroundColor: AppColors.tableFree,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteExpense(BuildContext context, int expenseId, String reason) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('حذف المصروف', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'هل أنت متأكد من حذف هذا المصروف: "$reason"؟',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('نعم، حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<DailyClosingCubit>().deleteExpense(expenseId);
+      if (context.mounted) {
+        context.read<DailyReportCubit>().loadReport();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حذف المصروف بنجاح'),
+            backgroundColor: AppColors.tableFree,
+          ),
+        );
+      }
     }
   }
 
@@ -135,7 +327,7 @@ class _DailyReportView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تقرير اليومية وتقفيل اليوم'),
+        title: const Text('تقرير الوردية وتقفيل الشيفت'),
         actions: [
           ElevatedButton.icon(
             icon: const Icon(Icons.assessment, color: Colors.white, size: 18),
@@ -168,7 +360,7 @@ class _DailyReportView extends StatelessWidget {
           TextButton.icon(
             icon: const Icon(Icons.history, color: AppColors.secondary, size: 18),
             label: const Text(
-              'سجل التقفيلات',
+              'سجل الورديات',
               style: TextStyle(color: AppColors.secondary, fontSize: 13),
             ),
             onPressed: () {
@@ -200,12 +392,20 @@ class _DailyReportView extends StatelessWidget {
       ),
       body: BlocListener<DailyClosingCubit, DailyClosingState>(
         listener: (context, state) {
-          if (state is DailyClosingSuccess) {
-            String message = 'تم تقفيل اليوم بنجاح.';
+          if (state is ExpenseOperationSuccess) {
+            context.read<DailyReportCubit>().loadReport();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.tableFree,
+              ),
+            );
+          } else if (state is DailyClosingSuccess) {
+            String message = 'تم تقفيل الوردية بنجاح.';
             if (state.isOnline) {
-              message += '\nتم إرسال تقرير اليوم إلى Telegram ✓';
+              message += '\nتم إرسال تقرير الوردية إلى Telegram ✓';
             } else {
-              message += '\n⚠️ لا يوجد اتصال بالإنترنت.\nسيتم إرسال تقرير اليوم تلقائيًا على Telegram عند عودة الاتصال.';
+              message += '\n⚠️ لا يوجد اتصال بالإنترنت.\nسيتم إرسال تقرير الوردية تلقائيًا على Telegram عند عودة الاتصال.';
             }
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -250,176 +450,348 @@ class _DailyReportView extends StatelessWidget {
                 }
               }
 
+              final netCashInDrawer = cashTotal - state.totalExpenses;
+
               return Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                          // ── Total Revenue Card ──────────────────────────────────
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.primary, width: 2),
+                    // ── Total Revenue Card ──────────────────────────────────
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.primary, width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'مجموع إيرادات مبيعات الوردية الحالية',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${state.totalRevenue.toStringAsFixed(2)} ج.م',
+                            style: const TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
                             ),
-                            child: Column(
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${state.invoices.length} فاتورة مسجلة بهذه الوردية',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          ),
+                          const SizedBox(height: 14),
+                          const Divider(color: Colors.white12, height: 1),
+                          const SizedBox(height: 12),
+                          // Payment Breakdown Row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildPaymentSummaryItem('💵 نقدي (Cash)', cashTotal, AppColors.tableFree),
+                              Container(width: 1, height: 30, color: Colors.white12),
+                              _buildPaymentSummaryItem('📱 محفظة (Wallet)', walletTotal, Colors.deepPurpleAccent),
+                              Container(width: 1, height: 30, color: Colors.white12),
+                              _buildPaymentSummaryItem('⚡ إنستاباي (InstaPay)', instapayTotal, Colors.amber),
+                            ],
+                          ),
+                          if (state.totalExpenses > 0) ...[
+                            const SizedBox(height: 12),
+                            const Divider(color: Colors.white12, height: 1),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                const Text(
-                                  'مجموع إيرادات الوردية الحالية',
-                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                                ),
-                                const SizedBox(height: 8),
+                                _buildPaymentSummaryItem('💸 إجمالي المصروفات', state.totalExpenses, Colors.redAccent),
+                                Container(width: 1, height: 30, color: Colors.white12),
+                                _buildPaymentSummaryItem('💵 صافي النقدية بالدرج', netCashInDrawer, AppColors.tableFree),
+                                Container(width: 1, height: 30, color: Colors.white12),
+                                _buildPaymentSummaryItem('💰 صافي الإيراد', state.netRevenue, AppColors.secondary),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // ── Transactions & Expenses Tabs Header ─────────────────
+                    Row(
+                      children: [
+                        // Tab button 0: Invoices
+                        InkWell(
+                          onTap: () => setState(() => _selectedTab = 0),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _selectedTab == 0 ? AppColors.primary : Colors.white10,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.receipt_long, size: 16, color: Colors.white),
+                                const SizedBox(width: 6),
                                 Text(
-                                  '${state.totalRevenue.toStringAsFixed(2)} ج.م',
-                                  style: const TextStyle(
-                                    color: AppColors.secondary,
-                                    fontSize: 42,
-                                    fontWeight: FontWeight.bold,
+                                  'فواتير الوردية (${state.invoices.length})',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: _selectedTab == 0 ? FontWeight.bold : FontWeight.normal,
+                                    fontSize: 13,
                                   ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '${state.invoices.length} فاتورة مفتوحة',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                                ),
-                                const SizedBox(height: 14),
-                                const Divider(color: Colors.white12, height: 1),
-                                const SizedBox(height: 12),
-                                // Payment Breakdown Row
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    _buildPaymentSummaryItem('💵 نقدي (Cash)', cashTotal, AppColors.tableFree),
-                                    Container(width: 1, height: 30, color: Colors.white12),
-                                    _buildPaymentSummaryItem('📱 محفظة (Wallet)', walletTotal, Colors.deepPurpleAccent),
-                                    Container(width: 1, height: 30, color: Colors.white12),
-                                    _buildPaymentSummaryItem('⚡ إنستاباي (InstaPay)', instapayTotal, Colors.amber),
-                                  ],
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 20),
-
-                          // ── Transactions List Header & Cashier Report Button ────
-                          Row(
-                            children: [
-                              const Expanded(
-                                child: Text(
-                                  'معاملات الوردية الحالية (اضغط لعرض الأصناف وإعادة الطباعة)',
-                                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.assessment, color: Colors.white, size: 16),
-                                label: const Text(
-                                  'تقرير الكاشير 📋',
-                                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                onPressed: () => _openCashierReport(context),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Expanded(
-                            child: state.invoices.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      'لا توجد معاملات في هذه الوردية',
-                                      style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    itemCount: state.invoices.length,
-                                    itemBuilder: (context, index) {
-                                      final inv = state.invoices[index];
-                                      final formattedDate = DateFormat('yyyy/MM/dd – HH:mm', 'ar').format(inv.createdAt);
-                                      return Container(
-                                        margin: const EdgeInsets.only(bottom: 8),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surface,
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: ListTile(
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                          leading: const Icon(Icons.receipt_long, color: AppColors.primary),
-                                          title: Row(
-                                            children: [
-                                              Text(
-                                                inv.invoiceNumber,
-                                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white10,
-                                                  borderRadius: BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  inv.paymentMethodLabel,
-                                                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                                                ),
-                                              ),
-                                              const Spacer(),
-                                              Text(
-                                                '${inv.grandTotal.toStringAsFixed(2)} ج.م',
-                                                style: const TextStyle(
-                                                  color: AppColors.secondary,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          subtitle: Row(
-                                            children: [
-                                              Text(
-                                                formattedDate,
-                                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                                              ),
-                                              const Spacer(),
-                                              const Text('تفاصيل الأصناف / إعادة طباعة 🖨️', style: TextStyle(color: AppColors.primary, fontSize: 11)),
-                                            ],
-                                          ),
-                                          onTap: () async {
-                                            final details = await context.read<DailyClosingCubit>().getInvoiceDetails(inv.id);
-                                            if (details != null && context.mounted) {
-                                              showInvoiceDetailsDialog(context, details);
-                                            }
-                                          },
-                                        ),
-                                      );
-                                    },
+                        ),
+                        const SizedBox(width: 10),
+                        // Tab button 1: Expenses
+                        InkWell(
+                          onTap: () => setState(() => _selectedTab = 1),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _selectedTab == 1 ? const Color(0xFFD97706) : Colors.white10,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.money_off, size: 16, color: Colors.white),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'مصروفات الوردية (${state.expenses.length})',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: _selectedTab == 1 ? FontWeight.bold : FontWeight.normal,
+                                    fontSize: 13,
                                   ),
+                                ),
+                              ],
+                            ),
                           ),
+                        ),
+                        const Spacer(),
+                        if (_selectedTab == 1)
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                            label: const Text('إضافة مصروف 💸', style: TextStyle(color: Colors.white, fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFD97706),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onPressed: () => _showAddExpenseDialog(context),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // ── Active Tab Content (Invoices or Expenses) ───────────
+                    Expanded(
+                      child: _selectedTab == 0
+                          ? (state.invoices.isEmpty
+                              ? const Center(
+                                  child: Text(
+                                    'لا توجد فواتير في هذه الوردية حتى الآن',
+                                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  itemCount: state.invoices.length,
+                                  itemBuilder: (context, index) {
+                                    final inv = state.invoices[index];
+                                    final formattedDate = DateFormat('yyyy/MM/dd – HH:mm', 'ar').format(inv.createdAt);
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: ListTile(
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                        leading: const Icon(Icons.receipt_long, color: AppColors.primary),
+                                        title: Row(
+                                          children: [
+                                            Text(
+                                              inv.invoiceNumber,
+                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white10,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                inv.paymentMethodLabel,
+                                                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            Text(
+                                              '${inv.grandTotal.toStringAsFixed(2)} ج.م',
+                                              style: const TextStyle(
+                                                color: AppColors.secondary,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        subtitle: Row(
+                                          children: [
+                                            Text(
+                                              formattedDate,
+                                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                            ),
+                                            const Spacer(),
+                                            const Text('تفاصيل الأصناف / إعادة طباعة 🖨️', style: TextStyle(color: AppColors.primary, fontSize: 11)),
+                                          ],
+                                        ),
+                                        onTap: () async {
+                                          final details = await context.read<DailyClosingCubit>().getInvoiceDetails(inv.id);
+                                          if (details != null && context.mounted) {
+                                            showInvoiceDetailsDialog(context, details);
+                                          }
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ))
+                          : (state.expenses.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.payments_outlined, color: Colors.white30, size: 48),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        'لا توجد مصروفات مسجلة في هذه الوردية',
+                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton.icon(
+                                        icon: const Icon(Icons.add, color: Colors.white),
+                                        label: const Text('تسجيل أول مصروف للوردية 💸', style: TextStyle(color: Colors.white)),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFFD97706),
+                                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                        onPressed: () => _showAddExpenseDialog(context),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  itemCount: state.expenses.length,
+                                  itemBuilder: (context, index) {
+                                    final exp = state.expenses[index];
+                                    final formattedDate = DateFormat('yyyy/MM/dd – HH:mm', 'ar').format(exp.createdAt);
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.amber.withAlpha(50)),
+                                      ),
+                                      child: ListTile(
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                        leading: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.withAlpha(30),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Icon(Icons.money_off, color: Colors.amber, size: 22),
+                                        ),
+                                        title: Text(
+                                          exp.reason,
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                        ),
+                                        subtitle: Text(
+                                          'وقت التسجيل: $formattedDate',
+                                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                        ),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              '-${exp.amount.toStringAsFixed(2)} ج.م',
+                                              style: const TextStyle(
+                                                color: Colors.redAccent,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                                              tooltip: 'حذف المصروف',
+                                              onPressed: () => _confirmDeleteExpense(context, exp.id, exp.reason),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )),
+                    ),
                     const SizedBox(height: 16),
 
-                    // ── Close Shift Button ──────────────────────────────────
+                    // ── Bottom Action Buttons: Close Shift & Add Expense ────
                     BlocBuilder<DailyClosingCubit, DailyClosingState>(
                       builder: (context, closingState) {
                         if (closingState is DailyClosingLoading) {
                           return const Center(child: CircularProgressIndicator());
                         }
-                        return SizedBox(
-                          height: 60,
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.lock_clock, color: Colors.white),
-                            label: const Text(
-                              'تقفيل حساب اليوم',
-                              style: TextStyle(fontSize: 20, color: Colors.white),
+                        return Row(
+                          children: [
+                            // 1. Close Shift Button
+                            Expanded(
+                              flex: 3,
+                              child: SizedBox(
+                                height: 56,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.lock_clock, color: Colors.white, size: 22),
+                                  label: const Text(
+                                    'تقفيل الوردية 🔒',
+                                    style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: () => _confirmCloseShift(context),
+                                ),
+                              ),
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            const SizedBox(width: 14),
+                            // 2. Add Expense Button (Directly next to it / under it)
+                            Expanded(
+                              flex: 2,
+                              child: SizedBox(
+                                height: 56,
+                                child: ElevatedButton.icon(
+                                  icon: const Icon(Icons.payments_outlined, color: Colors.white, size: 22),
+                                  label: const Text(
+                                    'إضافة مصروف يومي 💸',
+                                    style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFD97706),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: () => _showAddExpenseDialog(context),
+                                ),
+                              ),
                             ),
-                            onPressed: () => _confirmCloseShift(context),
-                          ),
+                          ],
                         );
                       },
                     ),

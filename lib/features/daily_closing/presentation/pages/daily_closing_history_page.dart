@@ -10,6 +10,8 @@ import '../../domain/entities/invoice_item_entity.dart';
 import '../cubit/daily_closing_cubit.dart';
 import '../cubit/daily_closing_state.dart';
 
+import '../../domain/entities/expense_item_entity.dart';
+
 class DailyClosingHistoryPage extends StatelessWidget {
   const DailyClosingHistoryPage({super.key});
 
@@ -63,7 +65,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
             const Icon(Icons.assessment, color: AppColors.primary),
             const SizedBox(width: 10),
             Text(
-              'تقرير تقفيل يوم ${closing.closingDate}',
+              'تقرير تقفيل وردية ${closing.closingDate} (${closing.closingTime})',
               style: const TextStyle(color: Colors.white, fontSize: 18),
             ),
           ],
@@ -75,10 +77,10 @@ class _DailyClosingHistoryView extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailRow('التاريخ', closing.closingDate),
+                _buildDetailRow('تاريخ الوردية', closing.closingDate),
                 _buildDetailRow('وقت التقفيل', closing.closingTime),
                 _buildDetailRow('عدد الفواتير', '${closing.invoiceCount} فاتورة'),
-                _buildDetailRow('عدد الاصناف المباعة', '${closing.totalItems} قطعة'),
+                _buildDetailRow('عدد الأصناف المباعة', '${closing.totalItems} قطعة'),
                 const Divider(color: Colors.white24, height: 24),
                 _buildDetailRow('إجمالي المبيعات', '${closing.grossSales.toStringAsFixed(2)} ج.م'),
                 if (closing.playStationTotal > 0)
@@ -96,8 +98,14 @@ class _DailyClosingHistoryView extends StatelessWidget {
                   _buildDetailRow('💳 المدفوع بطاقة (Card)', '${closing.cardTotal.toStringAsFixed(2)} ج.م'),
                 if (closing.otherPayments > 0)
                   _buildDetailRow('🔹 طرق أخرى', '${closing.otherPayments.toStringAsFixed(2)} ج.م'),
+                if (closing.expensesTotal > 0) ...[
+                  const Divider(color: Colors.white24, height: 24),
+                  _buildDetailRow('💸 إجمالي المصروفات', '-${closing.expensesTotal.toStringAsFixed(2)} ج.م', color: Colors.redAccent, isBold: true),
+                  _buildDetailRow('💵 صافي النقدية بالدرج', '${closing.netCashAfterExpenses.toStringAsFixed(2)} ج.م', color: AppColors.tableFree, isBold: true),
+                  _buildDetailRow('💰 صافي الإيراد بعد المصروفات', '${closing.netRevenueAfterExpenses.toStringAsFixed(2)} ج.م', color: AppColors.secondary, isBold: true),
+                ],
                 const Divider(color: Colors.white24, height: 24),
-                _buildDetailRow('حالة اليوم', 'مغلق (Closed)', color: AppColors.tableFree),
+                _buildDetailRow('حالة الوردية', 'مغلقة (Closed)', color: AppColors.tableFree),
               ],
             ),
           ),
@@ -107,6 +115,20 @@ class _DailyClosingHistoryView extends StatelessWidget {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('إغلاق', style: TextStyle(color: Colors.white54)),
           ),
+          if (closing.expensesTotal > 0)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD97706),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              icon: const Icon(Icons.money_off, size: 18),
+              label: const Text('مصروفات الوردية 💸', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () {
+                Navigator.pop(ctx);
+                _showShiftExpenses(context, closing.id, closing.closingDate, closing.closingTime);
+              },
+            ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -114,7 +136,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             icon: const Icon(Icons.assessment_rounded, size: 18),
-            label: const Text('تقرير الكاشير (طباعة وتيليجرام) 📋', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text('تقرير الكاشير 📋', style: TextStyle(fontWeight: FontWeight.bold)),
             onPressed: () {
               Navigator.pop(ctx);
               _openCashierReportForDate(context, closing.closingDate);
@@ -127,11 +149,80 @@ class _DailyClosingHistoryView extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             icon: const Icon(Icons.receipt_long, size: 18),
-            label: const Text('عرض فواتير هذا اليوم', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text('فواتير الوردية', style: TextStyle(fontWeight: FontWeight.bold)),
             onPressed: () {
               Navigator.pop(ctx);
               _showDayInvoices(context, closing.closingDate);
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showShiftExpenses(BuildContext context, int closingId, String date, String time) {
+    final cubit = context.read<DailyClosingCubit>();
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.money_off, color: Colors.amber),
+            const SizedBox(width: 10),
+            Text('مصروفات وردية $date ($time)', style: const TextStyle(color: Colors.white, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          height: 380,
+          child: FutureBuilder<List<ExpenseItemEntity>>(
+            future: cubit.getExpensesForClosing(closingId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return const Center(child: Text('حدث خطأ أثناء تحميل المصروفات', style: TextStyle(color: AppColors.error)));
+              }
+              final expenses = snapshot.data ?? [];
+              if (expenses.isEmpty) {
+                return const Center(
+                  child: Text('لا توجد مصروفات مسجلة لهذه الوردية', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                );
+              }
+              return ListView.builder(
+                itemCount: expenses.length,
+                itemBuilder: (context, index) {
+                  final exp = expenses[index];
+                  final timeStr = '${exp.createdAt.hour.toString().padLeft(2, '0')}:${exp.createdAt.minute.toString().padLeft(2, '0')}';
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: ListTile(
+                      leading: const Icon(Icons.money_off, color: Colors.amber),
+                      title: Text(exp.reason, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      subtitle: Text('الوقت: $timeStr', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      trailing: Text(
+                        '-${exp.amount.toStringAsFixed(2)} ج.م',
+                        style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('إغلاق', style: TextStyle(color: Colors.white54)),
           ),
         ],
       ),
@@ -259,7 +350,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('سجل تقفيلات اليومية السابقة'),
+        title: const Text('سجل تقفيلات الورديات السابقة'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -277,7 +368,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
             if (state.history.isEmpty) {
               return const Center(
                 child: Text(
-                  'لا توجد تقفيلات سابقة في النظام',
+                  'لا توجد ورديات سابقة مسجلة في النظام',
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
                 ),
               );
@@ -294,71 +385,83 @@ class _DailyClosingHistoryView extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
                     title: Row(
-                    children: [
-                      const Icon(Icons.calendar_today, color: AppColors.secondary, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'تقفيل يوم ${closing.closingDate}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${closing.netSales.toStringAsFixed(2)} ج.م',
-                        style: const TextStyle(
-                          color: AppColors.secondary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Row(
                       children: [
+                        const Icon(Icons.schedule, color: AppColors.secondary, size: 18),
+                        const SizedBox(width: 8),
                         Text(
-                          'وقت التقفيل: ${closing.closingTime}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          'تقفيل وردية ${closing.closingDate}',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 6),
                         Text(
-                          'عدد الفواتير: ${closing.invoiceCount}',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          '(${closing.closingTime})',
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                         ),
                         const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.tableFree.withAlpha(51),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'مغلق',
-                            style: TextStyle(color: AppColors.tableFree, fontSize: 12),
+                        Text(
+                          '${closing.netSales.toStringAsFixed(2)} ج.م',
+                          style: const TextStyle(
+                            color: AppColors.secondary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        icon: const Icon(Icons.assessment, size: 16),
-                        label: const Text('تقرير الكاشير 📋', style: TextStyle(fontSize: 12)),
-                        onPressed: () => _openCashierReportForDate(context, closing.closingDate),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            'الفواتير: ${closing.invoiceCount}',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                          if (closing.expensesTotal > 0) ...[
+                            const SizedBox(width: 12),
+                            Text(
+                              'المصروفات: -${closing.expensesTotal.toStringAsFixed(2)} ج.م',
+                              style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'الدرج: ${closing.netCashAfterExpenses.toStringAsFixed(2)} ج.م',
+                              style: const TextStyle(color: AppColors.tableFree, fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.tableFree.withAlpha(51),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'وردية مغلقة',
+                              style: TextStyle(color: AppColors.tableFree, fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
-                    ],
-                  ),
-                  onTap: () => _showClosingDetails(context, closing),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          icon: const Icon(Icons.assessment, size: 16),
+                          label: const Text('تقرير الكاشير 📋', style: TextStyle(fontSize: 12)),
+                          onPressed: () => _openCashierReportForDate(context, closing.closingDate),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),
+                      ],
+                    ),
+                    onTap: () => _showClosingDetails(context, closing),
                   ),
                 );
               },

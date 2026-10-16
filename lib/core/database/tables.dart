@@ -70,12 +70,12 @@ class InvoiceItems extends Table {
   RealColumn get totalPrice => real()();
 }
 
-/// Daily Closing snapshot — one record per calendar day.
-/// Stores a frozen snapshot of the day's financials at closing time.
+/// Shift / Daily Closing snapshot.
+/// Stores a frozen snapshot of the shift's financials at closing time.
 class DailyClosings extends Table {
   IntColumn get id => integer().autoIncrement()();
-  /// Stored as yyyy-MM-dd string for uniqueness constraint
-  TextColumn get closingDate => text().unique()();
+  /// Stored as yyyy-MM-dd string
+  TextColumn get closingDate => text()();
   TextColumn get closingTime => text()();
   IntColumn get invoiceCount => integer().withDefault(const Constant(0))();
   RealColumn get grossSales => real().withDefault(const Constant(0.0))();
@@ -90,11 +90,23 @@ class DailyClosings extends Table {
   // v7: Wallet and InstaPay totals
   RealColumn get walletTotal => real().withDefault(const Constant(0.0))();
   RealColumn get instapayTotal => real().withDefault(const Constant(0.0))();
+  // v8: Expenses total for shift closing
+  RealColumn get expensesTotal => real().withDefault(const Constant(0.0))();
   IntColumn get totalItems => integer().withDefault(const Constant(0))();
   /// 'open' or 'closed'
   TextColumn get status => text().withDefault(const Constant('closed'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// v8: Expenses table — tracks shift & daily expenses (مصروفات الوردية)
+class Expenses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  RealColumn get amount => real()();
+  TextColumn get reason => text()(); // سبب أو ملاحظة المصروف
+  IntColumn get shiftClosingId => integer().nullable().references(DailyClosings, #id)();
+  BoolColumn get isClosedShift => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 /// WhatsApp outbox queue — persisted in SQLite so messages survive restarts.

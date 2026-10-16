@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cash_cafe/core/constants/app_colors.dart';
 import 'package:cash_cafe/injection_container.dart' as di;
@@ -133,7 +133,7 @@ class _MainLayoutState extends State<MainLayout> {
                         _buildNavItem(Icons.inventory_2_rounded, 'المخزون', 3),
                         _buildNavItem(Icons.sports_esports, 'أجهزة PlayStation', 4),
                         if (isManager) ...[
-                          _buildNavItem(Icons.bar_chart_rounded, 'تقرير اليومية', 5),
+                          _buildNavItem(Icons.bar_chart_rounded, 'تقفيل الوردية والتقرير', 5),
                           _buildNavItem(Icons.send_rounded, 'إعدادات Telegram', 6),
                         ],
                         const Spacer(),

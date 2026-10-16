@@ -41,13 +41,23 @@ class _CashierReportDialogContentState extends State<_CashierReportDialogContent
 
     final isToday = DateFormat('yyyy/MM/dd').format(r.date) == DateFormat('yyyy/MM/dd').format(DateTime.now());
     final headerTitle = isToday
-        ? '<b>📊 تقرير الكاشير ومبيعات اليوم - Cafe POS</b>'
-        : '<b>📊 تقرير كاشير ومبيعات يوم ($dateStr) - Cafe POS</b>';
+        ? '<b>📊 تقرير تقفيل الوردية ومبيعات الكاشير - Cafe POS</b>'
+        : '<b>📊 تقرير تقفيل وردية يوم ($dateStr) - Cafe POS</b>';
+
+    final expBuf = StringBuffer();
+    if (r.expenses.isNotEmpty) {
+      expBuf.writeln('────────────────');
+      expBuf.writeln('<b>💸 مصروفات الوردية:</b> -${r.expensesTotal.toStringAsFixed(2)} ج.م');
+      for (final exp in r.expenses) {
+        expBuf.writeln('• ${exp.reason}: ${exp.amount.toStringAsFixed(2)} ج.م');
+      }
+      expBuf.writeln('💵 <b>صافي النقدية بالدرج:</b> <u>${r.netCashAfterExpenses.toStringAsFixed(2)} ج.م</u>');
+    }
 
     return '''
 $headerTitle
 
-<b>📅 تاريخ اليومية:</b> $dateStr
+<b>📅 تاريخ الوردية:</b> $dateStr
 <b>⏰ وقت استخراج التقرير:</b> $timeStr
 <b>عدد الفواتير:</b> ${r.invoiceCount} فاتورة
 <b>إجمالي القطع المباعة:</b> ${r.totalQuantitySold} قطعة
@@ -59,7 +69,7 @@ $headerTitle
 💵 <b>النقدي (Cash):</b> ${r.cashTotal.toStringAsFixed(2)} ج.م
 📱 <b>محفظة (Wallet):</b> ${r.walletTotal.toStringAsFixed(2)} ج.م
 ⚡ <b>إنستاباي (InstaPay):</b> ${r.instapayTotal.toStringAsFixed(2)} ج.م
-${r.cardTotal > 0 ? '💳 <b>بطاقة (Card):</b> ${r.cardTotal.toStringAsFixed(2)} ج.م\n' : ''}────────────────
+${r.cardTotal > 0 ? '💳 <b>بطاقة (Card):</b> ${r.cardTotal.toStringAsFixed(2)} ج.م\n' : ''}${expBuf.toString()}────────────────
 <b>الأصناف المباعة:</b>
 ${itemsBuf.toString().trim()}
 ${r.playStationTotal > 0 ? '\n🎮 <b>جلسات بلايستيشن:</b> ${r.playStationCount} جلسة = ${r.playStationTotal.toStringAsFixed(2)} ج.م' : ''}
@@ -196,7 +206,7 @@ ${r.playStationTotal > 0 ? '\n🎮 <b>جلسات بلايستيشن:</b> ${r.pla
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'تقرير مبيعات وحساب الكاشير',
+                        'تقرير تقفيل الوردية ومبيعات الكاشير',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -205,7 +215,7 @@ ${r.playStationTotal > 0 ? '\n🎮 <b>جلسات بلايستيشن:</b> ${r.pla
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'تاريخ التقرير: $formattedDate',
+                        'تاريخ ووقت التقرير: $formattedDate',
                         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                       ),
                     ],
@@ -253,10 +263,69 @@ ${r.playStationTotal > 0 ? '\n🎮 <b>جلسات بلايستيشن:</b> ${r.pla
                       _buildPaymentBreakdownItem('⚡ إنستاباي (InstaPay)', report.instapayTotal, Colors.amber),
                     ],
                   ),
+                  if (report.expensesTotal > 0) ...[
+                    const SizedBox(height: 10),
+                    const Divider(color: Colors.white12, height: 1),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildPaymentBreakdownItem('💸 مصروفات الوردية', report.expensesTotal, Colors.redAccent),
+                        Container(width: 1, height: 26, color: Colors.white12),
+                        _buildPaymentBreakdownItem('💵 صافي النقدية بالدرج', report.netCashAfterExpenses, AppColors.tableFree),
+                        Container(width: 1, height: 26, color: Colors.white12),
+                        _buildPaymentBreakdownItem('💰 صافي الإيراد', report.netRevenueAfterExpenses, AppColors.secondary),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
             const SizedBox(height: 14),
+
+            // ── Expenses Breakdown Box (if any) ────────────────────────────
+            if (report.expenses.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withAlpha(20),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.withAlpha(80)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.money_off, color: Colors.amber, size: 18),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'مصروفات الوردية المسجلة:',
+                          style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${report.expenses.length} مصروف = -${report.expensesTotal.toStringAsFixed(2)} ج.م',
+                          style: const TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ...report.expenses.map((exp) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            children: [
+                              Text('• ${exp.reason}', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                              const Spacer(),
+                              Text('-${exp.amount.toStringAsFixed(2)} ج.م', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
 
             // ── PlayStation Summary (if used) ───────────────────────────────
             if (report.playStationTotal > 0) ...[

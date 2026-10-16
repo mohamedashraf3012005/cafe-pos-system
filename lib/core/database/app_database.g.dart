@@ -2103,9 +2103,7 @@ class $DailyClosingsTable extends DailyClosings
   @override
   late final GeneratedColumn<String> closingDate = GeneratedColumn<String>(
       'closing_date', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _closingTimeMeta =
       const VerificationMeta('closingTime');
   @override
@@ -2200,6 +2198,14 @@ class $DailyClosingsTable extends DailyClosings
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       defaultValue: const Constant(0.0));
+  static const VerificationMeta _expensesTotalMeta =
+      const VerificationMeta('expensesTotal');
+  @override
+  late final GeneratedColumn<double> expensesTotal = GeneratedColumn<double>(
+      'expenses_total', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
   static const VerificationMeta _totalItemsMeta =
       const VerificationMeta('totalItems');
   @override
@@ -2247,6 +2253,7 @@ class $DailyClosingsTable extends DailyClosings
         playStationTotal,
         walletTotal,
         instapayTotal,
+        expensesTotal,
         totalItems,
         status,
         createdAt,
@@ -2337,6 +2344,12 @@ class $DailyClosingsTable extends DailyClosings
           instapayTotal.isAcceptableOrUnknown(
               data['instapay_total']!, _instapayTotalMeta));
     }
+    if (data.containsKey('expenses_total')) {
+      context.handle(
+          _expensesTotalMeta,
+          expensesTotal.isAcceptableOrUnknown(
+              data['expenses_total']!, _expensesTotalMeta));
+    }
     if (data.containsKey('total_items')) {
       context.handle(
           _totalItemsMeta,
@@ -2392,6 +2405,8 @@ class $DailyClosingsTable extends DailyClosings
           .read(DriftSqlType.double, data['${effectivePrefix}wallet_total'])!,
       instapayTotal: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}instapay_total'])!,
+      expensesTotal: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}expenses_total'])!,
       totalItems: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}total_items'])!,
       status: attachedDatabase.typeMapping
@@ -2412,7 +2427,7 @@ class $DailyClosingsTable extends DailyClosings
 class DailyClosing extends DataClass implements Insertable<DailyClosing> {
   final int id;
 
-  /// Stored as yyyy-MM-dd string for uniqueness constraint
+  /// Stored as yyyy-MM-dd string
   final String closingDate;
   final String closingTime;
   final int invoiceCount;
@@ -2426,6 +2441,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
   final double playStationTotal;
   final double walletTotal;
   final double instapayTotal;
+  final double expensesTotal;
   final int totalItems;
 
   /// 'open' or 'closed'
@@ -2447,6 +2463,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       required this.playStationTotal,
       required this.walletTotal,
       required this.instapayTotal,
+      required this.expensesTotal,
       required this.totalItems,
       required this.status,
       required this.createdAt,
@@ -2468,6 +2485,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
     map['play_station_total'] = Variable<double>(playStationTotal);
     map['wallet_total'] = Variable<double>(walletTotal);
     map['instapay_total'] = Variable<double>(instapayTotal);
+    map['expenses_total'] = Variable<double>(expensesTotal);
     map['total_items'] = Variable<int>(totalItems);
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -2491,6 +2509,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       playStationTotal: Value(playStationTotal),
       walletTotal: Value(walletTotal),
       instapayTotal: Value(instapayTotal),
+      expensesTotal: Value(expensesTotal),
       totalItems: Value(totalItems),
       status: Value(status),
       createdAt: Value(createdAt),
@@ -2516,6 +2535,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       playStationTotal: serializer.fromJson<double>(json['playStationTotal']),
       walletTotal: serializer.fromJson<double>(json['walletTotal']),
       instapayTotal: serializer.fromJson<double>(json['instapayTotal']),
+      expensesTotal: serializer.fromJson<double>(json['expensesTotal']),
       totalItems: serializer.fromJson<int>(json['totalItems']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2540,6 +2560,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       'playStationTotal': serializer.toJson<double>(playStationTotal),
       'walletTotal': serializer.toJson<double>(walletTotal),
       'instapayTotal': serializer.toJson<double>(instapayTotal),
+      'expensesTotal': serializer.toJson<double>(expensesTotal),
       'totalItems': serializer.toJson<int>(totalItems),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2562,6 +2583,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
           double? playStationTotal,
           double? walletTotal,
           double? instapayTotal,
+          double? expensesTotal,
           int? totalItems,
           String? status,
           DateTime? createdAt,
@@ -2581,6 +2603,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
         playStationTotal: playStationTotal ?? this.playStationTotal,
         walletTotal: walletTotal ?? this.walletTotal,
         instapayTotal: instapayTotal ?? this.instapayTotal,
+        expensesTotal: expensesTotal ?? this.expensesTotal,
         totalItems: totalItems ?? this.totalItems,
         status: status ?? this.status,
         createdAt: createdAt ?? this.createdAt,
@@ -2614,6 +2637,9 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       instapayTotal: data.instapayTotal.present
           ? data.instapayTotal.value
           : this.instapayTotal,
+      expensesTotal: data.expensesTotal.present
+          ? data.expensesTotal.value
+          : this.expensesTotal,
       totalItems:
           data.totalItems.present ? data.totalItems.value : this.totalItems,
       status: data.status.present ? data.status.value : this.status,
@@ -2639,6 +2665,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
           ..write('playStationTotal: $playStationTotal, ')
           ..write('walletTotal: $walletTotal, ')
           ..write('instapayTotal: $instapayTotal, ')
+          ..write('expensesTotal: $expensesTotal, ')
           ..write('totalItems: $totalItems, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
@@ -2663,6 +2690,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
       playStationTotal,
       walletTotal,
       instapayTotal,
+      expensesTotal,
       totalItems,
       status,
       createdAt,
@@ -2685,6 +2713,7 @@ class DailyClosing extends DataClass implements Insertable<DailyClosing> {
           other.playStationTotal == this.playStationTotal &&
           other.walletTotal == this.walletTotal &&
           other.instapayTotal == this.instapayTotal &&
+          other.expensesTotal == this.expensesTotal &&
           other.totalItems == this.totalItems &&
           other.status == this.status &&
           other.createdAt == this.createdAt &&
@@ -2706,6 +2735,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
   final Value<double> playStationTotal;
   final Value<double> walletTotal;
   final Value<double> instapayTotal;
+  final Value<double> expensesTotal;
   final Value<int> totalItems;
   final Value<String> status;
   final Value<DateTime> createdAt;
@@ -2725,6 +2755,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     this.playStationTotal = const Value.absent(),
     this.walletTotal = const Value.absent(),
     this.instapayTotal = const Value.absent(),
+    this.expensesTotal = const Value.absent(),
     this.totalItems = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2745,6 +2776,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     this.playStationTotal = const Value.absent(),
     this.walletTotal = const Value.absent(),
     this.instapayTotal = const Value.absent(),
+    this.expensesTotal = const Value.absent(),
     this.totalItems = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2766,6 +2798,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     Expression<double>? playStationTotal,
     Expression<double>? walletTotal,
     Expression<double>? instapayTotal,
+    Expression<double>? expensesTotal,
     Expression<int>? totalItems,
     Expression<String>? status,
     Expression<DateTime>? createdAt,
@@ -2786,6 +2819,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
       if (playStationTotal != null) 'play_station_total': playStationTotal,
       if (walletTotal != null) 'wallet_total': walletTotal,
       if (instapayTotal != null) 'instapay_total': instapayTotal,
+      if (expensesTotal != null) 'expenses_total': expensesTotal,
       if (totalItems != null) 'total_items': totalItems,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
@@ -2808,6 +2842,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
       Value<double>? playStationTotal,
       Value<double>? walletTotal,
       Value<double>? instapayTotal,
+      Value<double>? expensesTotal,
       Value<int>? totalItems,
       Value<String>? status,
       Value<DateTime>? createdAt,
@@ -2827,6 +2862,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
       playStationTotal: playStationTotal ?? this.playStationTotal,
       walletTotal: walletTotal ?? this.walletTotal,
       instapayTotal: instapayTotal ?? this.instapayTotal,
+      expensesTotal: expensesTotal ?? this.expensesTotal,
       totalItems: totalItems ?? this.totalItems,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -2879,6 +2915,9 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
     if (instapayTotal.present) {
       map['instapay_total'] = Variable<double>(instapayTotal.value);
     }
+    if (expensesTotal.present) {
+      map['expenses_total'] = Variable<double>(expensesTotal.value);
+    }
     if (totalItems.present) {
       map['total_items'] = Variable<int>(totalItems.value);
     }
@@ -2911,6 +2950,7 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
           ..write('playStationTotal: $playStationTotal, ')
           ..write('walletTotal: $walletTotal, ')
           ..write('instapayTotal: $instapayTotal, ')
+          ..write('expensesTotal: $expensesTotal, ')
           ..write('totalItems: $totalItems, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
@@ -5203,6 +5243,353 @@ class InvoiceItemsCompanion extends UpdateCompanion<InvoiceItem> {
   }
 }
 
+class $ExpensesTable extends Expenses with TableInfo<$ExpensesTable, Expense> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExpensesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+      'reason', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _shiftClosingIdMeta =
+      const VerificationMeta('shiftClosingId');
+  @override
+  late final GeneratedColumn<int> shiftClosingId = GeneratedColumn<int>(
+      'shift_closing_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES daily_closings (id)'));
+  static const VerificationMeta _isClosedShiftMeta =
+      const VerificationMeta('isClosedShift');
+  @override
+  late final GeneratedColumn<bool> isClosedShift = GeneratedColumn<bool>(
+      'is_closed_shift', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_closed_shift" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, amount, reason, shiftClosingId, isClosedShift, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'expenses';
+  @override
+  VerificationContext validateIntegrity(Insertable<Expense> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(_reasonMeta,
+          reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta));
+    } else if (isInserting) {
+      context.missing(_reasonMeta);
+    }
+    if (data.containsKey('shift_closing_id')) {
+      context.handle(
+          _shiftClosingIdMeta,
+          shiftClosingId.isAcceptableOrUnknown(
+              data['shift_closing_id']!, _shiftClosingIdMeta));
+    }
+    if (data.containsKey('is_closed_shift')) {
+      context.handle(
+          _isClosedShiftMeta,
+          isClosedShift.isAcceptableOrUnknown(
+              data['is_closed_shift']!, _isClosedShiftMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Expense map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Expense(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      reason: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reason'])!,
+      shiftClosingId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}shift_closing_id']),
+      isClosedShift: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_closed_shift'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $ExpensesTable createAlias(String alias) {
+    return $ExpensesTable(attachedDatabase, alias);
+  }
+}
+
+class Expense extends DataClass implements Insertable<Expense> {
+  final int id;
+  final double amount;
+  final String reason;
+  final int? shiftClosingId;
+  final bool isClosedShift;
+  final DateTime createdAt;
+  const Expense(
+      {required this.id,
+      required this.amount,
+      required this.reason,
+      this.shiftClosingId,
+      required this.isClosedShift,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['amount'] = Variable<double>(amount);
+    map['reason'] = Variable<String>(reason);
+    if (!nullToAbsent || shiftClosingId != null) {
+      map['shift_closing_id'] = Variable<int>(shiftClosingId);
+    }
+    map['is_closed_shift'] = Variable<bool>(isClosedShift);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  ExpensesCompanion toCompanion(bool nullToAbsent) {
+    return ExpensesCompanion(
+      id: Value(id),
+      amount: Value(amount),
+      reason: Value(reason),
+      shiftClosingId: shiftClosingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shiftClosingId),
+      isClosedShift: Value(isClosedShift),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Expense.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Expense(
+      id: serializer.fromJson<int>(json['id']),
+      amount: serializer.fromJson<double>(json['amount']),
+      reason: serializer.fromJson<String>(json['reason']),
+      shiftClosingId: serializer.fromJson<int?>(json['shiftClosingId']),
+      isClosedShift: serializer.fromJson<bool>(json['isClosedShift']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'amount': serializer.toJson<double>(amount),
+      'reason': serializer.toJson<String>(reason),
+      'shiftClosingId': serializer.toJson<int?>(shiftClosingId),
+      'isClosedShift': serializer.toJson<bool>(isClosedShift),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Expense copyWith(
+          {int? id,
+          double? amount,
+          String? reason,
+          Value<int?> shiftClosingId = const Value.absent(),
+          bool? isClosedShift,
+          DateTime? createdAt}) =>
+      Expense(
+        id: id ?? this.id,
+        amount: amount ?? this.amount,
+        reason: reason ?? this.reason,
+        shiftClosingId:
+            shiftClosingId.present ? shiftClosingId.value : this.shiftClosingId,
+        isClosedShift: isClosedShift ?? this.isClosedShift,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  Expense copyWithCompanion(ExpensesCompanion data) {
+    return Expense(
+      id: data.id.present ? data.id.value : this.id,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      shiftClosingId: data.shiftClosingId.present
+          ? data.shiftClosingId.value
+          : this.shiftClosingId,
+      isClosedShift: data.isClosedShift.present
+          ? data.isClosedShift.value
+          : this.isClosedShift,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Expense(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('reason: $reason, ')
+          ..write('shiftClosingId: $shiftClosingId, ')
+          ..write('isClosedShift: $isClosedShift, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, amount, reason, shiftClosingId, isClosedShift, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Expense &&
+          other.id == this.id &&
+          other.amount == this.amount &&
+          other.reason == this.reason &&
+          other.shiftClosingId == this.shiftClosingId &&
+          other.isClosedShift == this.isClosedShift &&
+          other.createdAt == this.createdAt);
+}
+
+class ExpensesCompanion extends UpdateCompanion<Expense> {
+  final Value<int> id;
+  final Value<double> amount;
+  final Value<String> reason;
+  final Value<int?> shiftClosingId;
+  final Value<bool> isClosedShift;
+  final Value<DateTime> createdAt;
+  const ExpensesCompanion({
+    this.id = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.shiftClosingId = const Value.absent(),
+    this.isClosedShift = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  ExpensesCompanion.insert({
+    this.id = const Value.absent(),
+    required double amount,
+    required String reason,
+    this.shiftClosingId = const Value.absent(),
+    this.isClosedShift = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  })  : amount = Value(amount),
+        reason = Value(reason);
+  static Insertable<Expense> custom({
+    Expression<int>? id,
+    Expression<double>? amount,
+    Expression<String>? reason,
+    Expression<int>? shiftClosingId,
+    Expression<bool>? isClosedShift,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amount != null) 'amount': amount,
+      if (reason != null) 'reason': reason,
+      if (shiftClosingId != null) 'shift_closing_id': shiftClosingId,
+      if (isClosedShift != null) 'is_closed_shift': isClosedShift,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  ExpensesCompanion copyWith(
+      {Value<int>? id,
+      Value<double>? amount,
+      Value<String>? reason,
+      Value<int?>? shiftClosingId,
+      Value<bool>? isClosedShift,
+      Value<DateTime>? createdAt}) {
+    return ExpensesCompanion(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      reason: reason ?? this.reason,
+      shiftClosingId: shiftClosingId ?? this.shiftClosingId,
+      isClosedShift: isClosedShift ?? this.isClosedShift,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (shiftClosingId.present) {
+      map['shift_closing_id'] = Variable<int>(shiftClosingId.value);
+    }
+    if (isClosedShift.present) {
+      map['is_closed_shift'] = Variable<bool>(isClosedShift.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExpensesCompanion(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('reason: $reason, ')
+          ..write('shiftClosingId: $shiftClosingId, ')
+          ..write('isClosedShift: $isClosedShift, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5221,6 +5608,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $InventoryMovementsTable inventoryMovements =
       $InventoryMovementsTable(this);
   late final $InvoiceItemsTable invoiceItems = $InvoiceItemsTable(this);
+  late final $ExpensesTable expenses = $ExpensesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5237,7 +5625,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         playStationDevices,
         playStationSessions,
         inventoryMovements,
-        invoiceItems
+        invoiceItems,
+        expenses
       ];
 }
 
@@ -7431,6 +7820,7 @@ typedef $$DailyClosingsTableCreateCompanionBuilder = DailyClosingsCompanion
   Value<double> playStationTotal,
   Value<double> walletTotal,
   Value<double> instapayTotal,
+  Value<double> expensesTotal,
   Value<int> totalItems,
   Value<String> status,
   Value<DateTime> createdAt,
@@ -7452,11 +7842,33 @@ typedef $$DailyClosingsTableUpdateCompanionBuilder = DailyClosingsCompanion
   Value<double> playStationTotal,
   Value<double> walletTotal,
   Value<double> instapayTotal,
+  Value<double> expensesTotal,
   Value<int> totalItems,
   Value<String> status,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
 });
+
+final class $$DailyClosingsTableReferences
+    extends BaseReferences<_$AppDatabase, $DailyClosingsTable, DailyClosing> {
+  $$DailyClosingsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ExpensesTable, List<Expense>> _expensesRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.expenses,
+          aliasName: $_aliasNameGenerator(
+              db.dailyClosings.id, db.expenses.shiftClosingId));
+
+  $$ExpensesTableProcessedTableManager get expensesRefs {
+    final manager = $$ExpensesTableTableManager($_db, $_db.expenses)
+        .filter((f) => f.shiftClosingId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_expensesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
 
 class $$DailyClosingsTableFilterComposer
     extends Composer<_$AppDatabase, $DailyClosingsTable> {
@@ -7510,6 +7922,9 @@ class $$DailyClosingsTableFilterComposer
   ColumnFilters<double> get instapayTotal => $composableBuilder(
       column: $table.instapayTotal, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<double> get expensesTotal => $composableBuilder(
+      column: $table.expensesTotal, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get totalItems => $composableBuilder(
       column: $table.totalItems, builder: (column) => ColumnFilters(column));
 
@@ -7521,6 +7936,27 @@ class $$DailyClosingsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> expensesRefs(
+      Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
+    final $$ExpensesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.shiftClosingId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableFilterComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$DailyClosingsTableOrderingComposer
@@ -7576,6 +8012,10 @@ class $$DailyClosingsTableOrderingComposer
 
   ColumnOrderings<double> get instapayTotal => $composableBuilder(
       column: $table.instapayTotal,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get expensesTotal => $composableBuilder(
+      column: $table.expensesTotal,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get totalItems => $composableBuilder(
@@ -7642,6 +8082,9 @@ class $$DailyClosingsTableAnnotationComposer
   GeneratedColumn<double> get instapayTotal => $composableBuilder(
       column: $table.instapayTotal, builder: (column) => column);
 
+  GeneratedColumn<double> get expensesTotal => $composableBuilder(
+      column: $table.expensesTotal, builder: (column) => column);
+
   GeneratedColumn<int> get totalItems => $composableBuilder(
       column: $table.totalItems, builder: (column) => column);
 
@@ -7653,6 +8096,27 @@ class $$DailyClosingsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> expensesRefs<T extends Object>(
+      Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
+    final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.expenses,
+        getReferencedColumn: (t) => t.shiftClosingId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ExpensesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.expenses,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$DailyClosingsTableTableManager extends RootTableManager<
@@ -7664,12 +8128,9 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
     $$DailyClosingsTableAnnotationComposer,
     $$DailyClosingsTableCreateCompanionBuilder,
     $$DailyClosingsTableUpdateCompanionBuilder,
-    (
-      DailyClosing,
-      BaseReferences<_$AppDatabase, $DailyClosingsTable, DailyClosing>
-    ),
+    (DailyClosing, $$DailyClosingsTableReferences),
     DailyClosing,
-    PrefetchHooks Function()> {
+    PrefetchHooks Function({bool expensesRefs})> {
   $$DailyClosingsTableTableManager(_$AppDatabase db, $DailyClosingsTable table)
       : super(TableManagerState(
           db: db,
@@ -7695,6 +8156,7 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             Value<double> playStationTotal = const Value.absent(),
             Value<double> walletTotal = const Value.absent(),
             Value<double> instapayTotal = const Value.absent(),
+            Value<double> expensesTotal = const Value.absent(),
             Value<int> totalItems = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7715,6 +8177,7 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             playStationTotal: playStationTotal,
             walletTotal: walletTotal,
             instapayTotal: instapayTotal,
+            expensesTotal: expensesTotal,
             totalItems: totalItems,
             status: status,
             createdAt: createdAt,
@@ -7735,6 +8198,7 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             Value<double> playStationTotal = const Value.absent(),
             Value<double> walletTotal = const Value.absent(),
             Value<double> instapayTotal = const Value.absent(),
+            Value<double> expensesTotal = const Value.absent(),
             Value<int> totalItems = const Value.absent(),
             Value<String> status = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -7755,15 +8219,42 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
             playStationTotal: playStationTotal,
             walletTotal: walletTotal,
             instapayTotal: instapayTotal,
+            expensesTotal: expensesTotal,
             totalItems: totalItems,
             status: status,
             createdAt: createdAt,
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable(table),
+                    $$DailyClosingsTableReferences(db, table, e)
+                  ))
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({expensesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (expensesRefs) db.expenses],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (expensesRefs)
+                    await $_getPrefetchedData<DailyClosing, $DailyClosingsTable,
+                            Expense>(
+                        currentTable: table,
+                        referencedTable: $$DailyClosingsTableReferences
+                            ._expensesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DailyClosingsTableReferences(db, table, p0)
+                                .expensesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.shiftClosingId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
         ));
 }
 
@@ -7776,12 +8267,9 @@ typedef $$DailyClosingsTableProcessedTableManager = ProcessedTableManager<
     $$DailyClosingsTableAnnotationComposer,
     $$DailyClosingsTableCreateCompanionBuilder,
     $$DailyClosingsTableUpdateCompanionBuilder,
-    (
-      DailyClosing,
-      BaseReferences<_$AppDatabase, $DailyClosingsTable, DailyClosing>
-    ),
+    (DailyClosing, $$DailyClosingsTableReferences),
     DailyClosing,
-    PrefetchHooks Function()>;
+    PrefetchHooks Function({bool expensesRefs})>;
 typedef $$WhatsAppQueueTableCreateCompanionBuilder = WhatsAppQueueCompanion
     Function({
   Value<int> id,
@@ -9389,6 +9877,287 @@ typedef $$InvoiceItemsTableProcessedTableManager = ProcessedTableManager<
     (InvoiceItem, $$InvoiceItemsTableReferences),
     InvoiceItem,
     PrefetchHooks Function({bool invoiceId})>;
+typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
+  Value<int> id,
+  required double amount,
+  required String reason,
+  Value<int?> shiftClosingId,
+  Value<bool> isClosedShift,
+  Value<DateTime> createdAt,
+});
+typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
+  Value<int> id,
+  Value<double> amount,
+  Value<String> reason,
+  Value<int?> shiftClosingId,
+  Value<bool> isClosedShift,
+  Value<DateTime> createdAt,
+});
+
+final class $$ExpensesTableReferences
+    extends BaseReferences<_$AppDatabase, $ExpensesTable, Expense> {
+  $$ExpensesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $DailyClosingsTable _shiftClosingIdTable(_$AppDatabase db) =>
+      db.dailyClosings.createAlias($_aliasNameGenerator(
+          db.expenses.shiftClosingId, db.dailyClosings.id));
+
+  $$DailyClosingsTableProcessedTableManager? get shiftClosingId {
+    final $_column = $_itemColumn<int>('shift_closing_id');
+    if ($_column == null) return null;
+    final manager = $$DailyClosingsTableTableManager($_db, $_db.dailyClosings)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shiftClosingIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ExpensesTableFilterComposer
+    extends Composer<_$AppDatabase, $ExpensesTable> {
+  $$ExpensesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get reason => $composableBuilder(
+      column: $table.reason, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isClosedShift => $composableBuilder(
+      column: $table.isClosedShift, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$DailyClosingsTableFilterComposer get shiftClosingId {
+    final $$DailyClosingsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shiftClosingId,
+        referencedTable: $db.dailyClosings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DailyClosingsTableFilterComposer(
+              $db: $db,
+              $table: $db.dailyClosings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ExpensesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ExpensesTable> {
+  $$ExpensesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+      column: $table.reason, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isClosedShift => $composableBuilder(
+      column: $table.isClosedShift,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$DailyClosingsTableOrderingComposer get shiftClosingId {
+    final $$DailyClosingsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shiftClosingId,
+        referencedTable: $db.dailyClosings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DailyClosingsTableOrderingComposer(
+              $db: $db,
+              $table: $db.dailyClosings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ExpensesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ExpensesTable> {
+  $$ExpensesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<bool> get isClosedShift => $composableBuilder(
+      column: $table.isClosedShift, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$DailyClosingsTableAnnotationComposer get shiftClosingId {
+    final $$DailyClosingsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shiftClosingId,
+        referencedTable: $db.dailyClosings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DailyClosingsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dailyClosings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ExpensesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ExpensesTable,
+    Expense,
+    $$ExpensesTableFilterComposer,
+    $$ExpensesTableOrderingComposer,
+    $$ExpensesTableAnnotationComposer,
+    $$ExpensesTableCreateCompanionBuilder,
+    $$ExpensesTableUpdateCompanionBuilder,
+    (Expense, $$ExpensesTableReferences),
+    Expense,
+    PrefetchHooks Function({bool shiftClosingId})> {
+  $$ExpensesTableTableManager(_$AppDatabase db, $ExpensesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ExpensesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ExpensesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ExpensesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<String> reason = const Value.absent(),
+            Value<int?> shiftClosingId = const Value.absent(),
+            Value<bool> isClosedShift = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              ExpensesCompanion(
+            id: id,
+            amount: amount,
+            reason: reason,
+            shiftClosingId: shiftClosingId,
+            isClosedShift: isClosedShift,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required double amount,
+            required String reason,
+            Value<int?> shiftClosingId = const Value.absent(),
+            Value<bool> isClosedShift = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              ExpensesCompanion.insert(
+            id: id,
+            amount: amount,
+            reason: reason,
+            shiftClosingId: shiftClosingId,
+            isClosedShift: isClosedShift,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$ExpensesTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({shiftClosingId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (shiftClosingId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.shiftClosingId,
+                    referencedTable:
+                        $$ExpensesTableReferences._shiftClosingIdTable(db),
+                    referencedColumn:
+                        $$ExpensesTableReferences._shiftClosingIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ExpensesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ExpensesTable,
+    Expense,
+    $$ExpensesTableFilterComposer,
+    $$ExpensesTableOrderingComposer,
+    $$ExpensesTableAnnotationComposer,
+    $$ExpensesTableCreateCompanionBuilder,
+    $$ExpensesTableUpdateCompanionBuilder,
+    (Expense, $$ExpensesTableReferences),
+    Expense,
+    PrefetchHooks Function({bool shiftClosingId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9417,4 +10186,6 @@ class $AppDatabaseManager {
       $$InventoryMovementsTableTableManager(_db, _db.inventoryMovements);
   $$InvoiceItemsTableTableManager get invoiceItems =>
       $$InvoiceItemsTableTableManager(_db, _db.invoiceItems);
+  $$ExpensesTableTableManager get expenses =>
+      $$ExpensesTableTableManager(_db, _db.expenses);
 }

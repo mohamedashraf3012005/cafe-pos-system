@@ -45,3 +45,10 @@ class DailyClosingError extends DailyClosingState {
   @override
   List<Object?> get props => [message];
 }
+
+class ExpenseOperationSuccess extends DailyClosingState {
+  final String message;
+  const ExpenseOperationSuccess(this.message);
+  @override
+  List<Object?> get props => [message];
+}

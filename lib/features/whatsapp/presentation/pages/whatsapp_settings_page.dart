@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../injection_container.dart' as di;
@@ -206,7 +206,7 @@ class _WhatsAppSettingsViewState extends State<_WhatsAppSettingsView> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'الرقم الذي يستقبل الفواتير وتقفيل حساب اليومية (الافتراضي: +201002773665)',
+                        'الرقم الذي يستقبل الفواتير وتقفيل الوردية (الافتراضي: +201002773665)',
                         style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                       ),
                       const SizedBox(height: 16),

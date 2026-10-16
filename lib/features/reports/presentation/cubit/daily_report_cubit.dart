@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/invoice_report_entity.dart';
 import '../../domain/entities/cashier_report_entity.dart';
 import '../../domain/repositories/daily_report_repository.dart';
+import '../../../daily_closing/domain/entities/expense_item_entity.dart';
 
 // ── States ────────────────────────────────────────────────────────────────────
 
@@ -19,14 +20,20 @@ class DailyReportLoading extends DailyReportState {}
 class DailyReportLoaded extends DailyReportState {
   final List<InvoiceReportEntity> invoices;
   final double totalRevenue;
+  final List<ExpenseItemEntity> expenses;
+  final double totalExpenses;
+
+  double get netRevenue => totalRevenue - totalExpenses;
 
   const DailyReportLoaded({
     required this.invoices,
     required this.totalRevenue,
+    this.expenses = const [],
+    this.totalExpenses = 0.0,
   });
 
   @override
-  List<Object> get props => [invoices, totalRevenue];
+  List<Object> get props => [invoices, totalRevenue, expenses, totalExpenses];
 }
 
 class DailyReportError extends DailyReportState {
@@ -49,9 +56,18 @@ class DailyReportCubit extends Cubit<DailyReportState> {
     emit(DailyReportLoading());
     try {
       final invoices = await repository.getOpenShiftInvoices();
-      final total =
+      final expenses = await repository.getOpenShiftExpenses();
+      final totalRev =
           invoices.fold<double>(0.0, (sum, inv) => sum + inv.grandTotal);
-      emit(DailyReportLoaded(invoices: invoices, totalRevenue: total));
+      final totalExp =
+          expenses.fold<double>(0.0, (sum, exp) => sum + exp.amount);
+
+      emit(DailyReportLoaded(
+        invoices: invoices,
+        totalRevenue: totalRev,
+        expenses: expenses,
+        totalExpenses: totalExp,
+      ));
     } catch (e) {
       emit(DailyReportError(e.toString()));
     }

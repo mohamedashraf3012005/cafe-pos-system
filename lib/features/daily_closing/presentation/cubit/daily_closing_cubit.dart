@@ -61,6 +61,34 @@ class DailyClosingCubit extends Cubit<DailyClosingState> {
     }
   }
 
+  Future<void> closeShift() => closeDay();
+
+  Future<void> addExpense(double amount, String reason) async {
+    try {
+      await dailyClosingRepository.addExpense(amount, reason);
+      emit(const ExpenseOperationSuccess('تم تسجيل المصروف بنجاح.'));
+    } catch (e) {
+      emit(DailyClosingError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<List<ExpenseItemEntity>> getOpenShiftExpenses() {
+    return dailyClosingRepository.getOpenShiftExpenses();
+  }
+
+  Future<void> deleteExpense(int expenseId) async {
+    try {
+      await dailyClosingRepository.deleteExpense(expenseId);
+      emit(const ExpenseOperationSuccess('تم حذف المصروف بنجاح.'));
+    } catch (e) {
+      emit(DailyClosingError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  Future<List<ExpenseItemEntity>> getExpensesForClosing(int closingId) {
+    return dailyClosingRepository.getExpensesForClosing(closingId);
+  }
+
   Future<List<InvoiceDetailEntity>> getInvoicesForClosingDate(String dateStr) {
     return dailyClosingRepository.getInvoicesForClosingDate(dateStr);
   }

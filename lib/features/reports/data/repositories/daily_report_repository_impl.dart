@@ -3,6 +3,7 @@ import '../../../../core/database/app_database.dart';
 import '../../domain/entities/invoice_report_entity.dart';
 import '../../domain/entities/cashier_report_entity.dart';
 import '../../domain/repositories/daily_report_repository.dart';
+import '../../../daily_closing/domain/entities/expense_item_entity.dart';
 
 class DailyReportRepositoryImpl implements DailyReportRepository {
   final AppDatabase db;
@@ -29,10 +30,33 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
   }
 
   @override
+  Future<List<ExpenseItemEntity>> getOpenShiftExpenses() async {
+    final rows = await (db.select(db.expenses)
+          ..where((e) => e.isClosedShift.equals(false))
+          ..orderBy([(e) => OrderingTerm.desc(e.createdAt)]))
+        .get();
+
+    return rows
+        .map((r) => ExpenseItemEntity(
+              id: r.id,
+              amount: r.amount,
+              reason: r.reason,
+              createdAt: r.createdAt,
+              isClosedShift: r.isClosedShift,
+              shiftClosingId: r.shiftClosingId,
+            ))
+        .toList();
+  }
+
+  @override
   Future<void> closeShift() async {
     await (db.update(db.invoices)
           ..where((inv) => inv.isClosedShift.equals(false)))
         .write(const InvoicesCompanion(isClosedShift: Value(true)));
+
+    await (db.update(db.expenses)
+          ..where((e) => e.isClosedShift.equals(false)))
+        .write(const ExpensesCompanion(isClosedShift: Value(true)));
   }
 
   @override
@@ -72,13 +96,42 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
             ..where((inv) => inv.isClosedShift.equals(false))
             ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
           .get();
+    final List<Expense> targetExpenses;
+    if (isHistorical) {
+      final startOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
+      final endOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59, 59, 999);
+
+      targetExpenses = await (db.select(db.expenses)
+            ..where((e) =>
+                e.createdAt.isBiggerOrEqualValue(startOfDay) &
+                e.createdAt.isSmallerOrEqualValue(endOfDay))
+            ..orderBy([(e) => OrderingTerm.asc(e.createdAt)]))
+          .get();
+    } else {
+      targetExpenses = await (db.select(db.expenses)
+            ..where((e) => e.isClosedShift.equals(false))
+            ..orderBy([(e) => OrderingTerm.asc(e.createdAt)]))
+          .get();
     }
 
+    final expenseEntities = targetExpenses
+        .map((e) => CashierExpenseItemEntity(
+              id: e.id,
+              reason: e.reason,
+              amount: e.amount,
+              createdAt: e.createdAt,
+            ))
+        .toList();
+
+    final expensesTotal = expenseEntities.fold<double>(0.0, (sum, e) => sum + e.amount);
+
     if (targetInvoices.isEmpty) {
-      // Check if a daily closing record exists for this date
+      // Check if a shift/daily closing record exists for this date
       final targetDateFormatted = '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}';
       final closingRow = await (db.select(db.dailyClosings)
-            ..where((d) => d.closingDate.equals(targetDateFormatted)))
+            ..where((d) => d.closingDate.equals(targetDateFormatted))
+            ..orderBy([(d) => OrderingTerm.desc(d.createdAt)])
+            ..limit(1))
           .getSingleOrNull();
 
       if (closingRow != null) {
@@ -94,6 +147,8 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
           playStationCount: 0,
           totalQuantitySold: closingRow.totalItems,
           items: const [],
+          expensesTotal: closingRow.expensesTotal,
+          expenses: expenseEntities,
         );
       }
 
@@ -109,6 +164,8 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
         playStationCount: 0,
         totalQuantitySold: 0,
         items: const [],
+        expensesTotal: expensesTotal,
+        expenses: expenseEntities,
       );
     }
 
@@ -223,6 +280,8 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
       playStationCount: playStationCount,
       totalQuantitySold: totalQuantity,
       items: reportItems,
+      expensesTotal: expensesTotal,
+      expenses: expenseEntities,
     );
   }
 }

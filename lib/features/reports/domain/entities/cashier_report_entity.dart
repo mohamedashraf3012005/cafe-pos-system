@@ -12,6 +12,20 @@ class CashierReportItemEntity {
   });
 }
 
+class CashierExpenseItemEntity {
+  final int? id;
+  final String reason;
+  final double amount;
+  final DateTime createdAt;
+
+  const CashierExpenseItemEntity({
+    this.id,
+    required this.reason,
+    required this.amount,
+    required this.createdAt,
+  });
+}
+
 class CashierReportEntity {
   final DateTime date;
   final int invoiceCount;
@@ -24,6 +38,11 @@ class CashierReportEntity {
   final int playStationCount;
   final int totalQuantitySold;
   final List<CashierReportItemEntity> items;
+  final double expensesTotal;
+  final List<CashierExpenseItemEntity> expenses;
+
+  double get netCashAfterExpenses => cashTotal - expensesTotal;
+  double get netRevenueAfterExpenses => totalRevenue - expensesTotal;
 
   const CashierReportEntity({
     required this.date,
@@ -37,5 +56,7 @@ class CashierReportEntity {
     required this.playStationCount,
     required this.totalQuantitySold,
     required this.items,
+    this.expensesTotal = 0.0,
+    this.expenses = const [],
   });
 }

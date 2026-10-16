@@ -1,4 +1,4 @@
-/// Immutable snapshot of a day's financials captured at closing time.
+/// Immutable snapshot of a shift's financials captured at closing time.
 class DailyClosingEntity {
   final int id;
   final String closingDate; // yyyy-MM-dd
@@ -14,10 +14,14 @@ class DailyClosingEntity {
   final double cardTotal;
   final double otherPayments;
   final double playStationTotal;
+  final double expensesTotal;
   final int totalItems;
   final String status; // 'open' | 'closed'
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  double get netCashAfterExpenses => cashTotal - expensesTotal;
+  double get netRevenueAfterExpenses => netSales - expensesTotal;
 
   const DailyClosingEntity({
     required this.id,
@@ -34,6 +38,7 @@ class DailyClosingEntity {
     required this.cardTotal,
     required this.otherPayments,
     this.playStationTotal = 0.0,
+    this.expensesTotal = 0.0,
     required this.totalItems,
     required this.status,
     required this.createdAt,

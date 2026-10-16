@@ -17,12 +17,13 @@ part 'app_database.g.dart';
   PlayStationSessions,
   InventoryMovements,
   InvoiceItems,
+  Expenses,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 7; // v7: InvoiceItems, trackInventory, walletTotal, instapayTotal
+  int get schemaVersion => 8; // v8: Expenses table, Shift closing, expensesTotal
 
   @override
   MigrationStrategy get migration {
@@ -90,6 +91,56 @@ class AppDatabase extends _$AppDatabase {
           // Mod 4: wallet and instapay totals on DailyClosings
           await safeAddColumn(dailyClosings, dailyClosings.walletTotal);
           await safeAddColumn(dailyClosings, dailyClosings.instapayTotal);
+        }
+
+        // v7→v8: Shift closing support & Expenses table
+        if (from < 8) {
+          // 1. Create Expenses table
+          await safeCreateTable(expenses);
+
+          // 2. Add expensesTotal column to dailyClosings
+          await safeAddColumn(dailyClosings, dailyClosings.expensesTotal);
+
+          // 3. Remove inline unique constraint on closing_date in daily_closings table
+          try {
+            await customStatement('''
+              CREATE TABLE IF NOT EXISTS daily_closings_v8 (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                closing_date TEXT NOT NULL,
+                closing_time TEXT NOT NULL,
+                invoice_count INTEGER NOT NULL DEFAULT 0,
+                gross_sales REAL NOT NULL DEFAULT 0.0,
+                discounts REAL NOT NULL DEFAULT 0.0,
+                tax_total REAL NOT NULL DEFAULT 0.0,
+                net_sales REAL NOT NULL DEFAULT 0.0,
+                cash_total REAL NOT NULL DEFAULT 0.0,
+                card_total REAL NOT NULL DEFAULT 0.0,
+                other_payments REAL NOT NULL DEFAULT 0.0,
+                total_items INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'closed',
+                created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+                updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+                play_station_total REAL NOT NULL DEFAULT 0.0,
+                wallet_total REAL NOT NULL DEFAULT 0.0,
+                instapay_total REAL NOT NULL DEFAULT 0.0,
+                expenses_total REAL NOT NULL DEFAULT 0.0
+              );
+            ''');
+            await customStatement('''
+              INSERT OR IGNORE INTO daily_closings_v8 (
+                id, closing_date, closing_time, invoice_count, gross_sales, discounts,
+                tax_total, net_sales, cash_total, card_total, other_payments, total_items,
+                status, created_at, updated_at, play_station_total, wallet_total, instapay_total, expenses_total
+              )
+              SELECT 
+                id, closing_date, closing_time, invoice_count, gross_sales, discounts,
+                tax_total, net_sales, cash_total, card_total, other_payments, total_items,
+                status, created_at, updated_at, play_station_total, wallet_total, instapay_total, 0.0
+              FROM daily_closings;
+            ''');
+            await customStatement('DROP TABLE daily_closings;');
+            await customStatement('ALTER TABLE daily_closings_v8 RENAME TO daily_closings;');
+          } catch (_) {}
         }
       },
     );

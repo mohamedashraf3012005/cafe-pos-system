@@ -297,5 +297,104 @@ void main() {
       expect(report.items[1].productName, equals('كابتشينو'));
       expect(report.items[1].quantity, equals(10));
     });
+
+    test('Shift Closing & Expenses: CashierReportEntity calculates net drawer cash accurately', () {
+      final now = DateTime.now();
+      final report = CashierReportEntity(
+        date: now,
+        invoiceCount: 10,
+        totalRevenue: 1000.0,
+        cashTotal: 700.0,
+        walletTotal: 200.0,
+        instapayTotal: 100.0,
+        cardTotal: 0.0,
+        playStationTotal: 0.0,
+        playStationCount: 0,
+        totalQuantitySold: 20,
+        items: const [],
+        expensesTotal: 120.0,
+        expenses: [
+          CashierExpenseItemEntity(
+            id: 1,
+            reason: 'شراء ثلج',
+            amount: 50.0,
+            createdAt: now,
+          ),
+          CashierExpenseItemEntity(
+            id: 2,
+            reason: 'مستلزمات نظافة',
+            amount: 70.0,
+            createdAt: now,
+          ),
+        ],
+      );
+
+      expect(report.expenses.length, equals(2));
+      expect(report.expensesTotal, equals(120.0));
+      expect(report.cashTotal, equals(700.0));
+      // Net Cash in drawer = cashTotal (700) - expensesTotal (120) = 580
+      expect(report.netCashAfterExpenses, equals(580.0));
+      // Net Revenue = totalRevenue (1000) - expensesTotal (120) = 880
+      expect(report.netRevenueAfterExpenses, equals(880.0));
+    });
+
+    test('Shift Closing & Expenses: DailyClosingEntity stores shift time and net cash drawer', () {
+      final now = DateTime.now();
+      final closingShift1 = DailyClosingEntity(
+        id: 1,
+        closingDate: '2026-10-16',
+        closingTime: '15:30',
+        invoiceCount: 25,
+        grossSales: 2000.0,
+        discounts: 0.0,
+        taxTotal: 0.0,
+        netSales: 2000.0,
+        cashTotal: 1500.0,
+        walletTotal: 300.0,
+        instapayTotal: 200.0,
+        cardTotal: 0.0,
+        otherPayments: 0.0,
+        playStationTotal: 0.0,
+        expensesTotal: 150.0,
+        totalItems: 40,
+        status: 'closed',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final closingShift2 = DailyClosingEntity(
+        id: 2,
+        closingDate: '2026-10-16', // Same date, second shift!
+        closingTime: '23:45',
+        invoiceCount: 30,
+        grossSales: 2500.0,
+        discounts: 0.0,
+        taxTotal: 0.0,
+        netSales: 2500.0,
+        cashTotal: 1800.0,
+        walletTotal: 400.0,
+        instapayTotal: 300.0,
+        cardTotal: 0.0,
+        otherPayments: 0.0,
+        playStationTotal: 0.0,
+        expensesTotal: 80.0,
+        totalItems: 55,
+        status: 'closed',
+        createdAt: now.add(const Duration(hours: 8)),
+        updatedAt: now.add(const Duration(hours: 8)),
+      );
+
+      // Verify Shift 1
+      expect(closingShift1.closingTime, equals('15:30'));
+      expect(closingShift1.expensesTotal, equals(150.0));
+      expect(closingShift1.netCashAfterExpenses, equals(1350.0)); // 1500 - 150
+      expect(closingShift1.netRevenueAfterExpenses, equals(1850.0)); // 2000 - 150
+
+      // Verify Shift 2
+      expect(closingShift2.closingTime, equals('23:45'));
+      expect(closingShift2.expensesTotal, equals(80.0));
+      expect(closingShift2.netCashAfterExpenses, equals(1720.0)); // 1800 - 80
+      expect(closingShift2.netRevenueAfterExpenses, equals(2420.0)); // 2500 - 80
+    });
   });
 }
