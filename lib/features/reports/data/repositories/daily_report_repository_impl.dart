@@ -96,6 +96,8 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
             ..where((inv) => inv.isClosedShift.equals(false))
             ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
           .get();
+    }
+
     final List<Expense> targetExpenses;
     if (isHistorical) {
       final startOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day);

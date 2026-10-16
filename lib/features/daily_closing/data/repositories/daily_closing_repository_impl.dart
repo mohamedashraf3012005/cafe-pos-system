@@ -319,21 +319,25 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
           .toList();
     }
 
-    final orderItems = await (db.select(db.orderItems)
-          ..where((item) => item.orderId.equals(orderId)))
-        .get();
+    final itemsQuery = db.select(db.orderItems).join([
+      leftOuterJoin(db.products, db.products.id.equalsExp(db.orderItems.productId)),
+    ])..where(db.orderItems.orderId.equals(orderId));
 
-    return orderItems
-        .map((item) => InvoiceItemEntity(
-              id: item.id,
-              invoiceId: invoiceId,
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalPrice: item.unitPrice * item.quantity,
-            ))
-        .toList();
+    final rows = await itemsQuery.get();
+
+    return rows.map((row) {
+      final item = row.readTable(db.orderItems);
+      final product = row.readTableOrNull(db.products);
+      return InvoiceItemEntity(
+        id: item.id,
+        invoiceId: invoiceId,
+        productId: item.productId,
+        productName: product?.name ?? 'منتج غير معروف',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.unitPrice * item.quantity,
+      );
+    }).toList();
   }
 
   @override

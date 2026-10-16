@@ -4,6 +4,7 @@ import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/whatsapp_queue_processor.dart';
 import '../../../../core/services/whatsapp_settings_service.dart';
 import '../../domain/entities/invoice_item_entity.dart';
+import '../../domain/entities/expense_item_entity.dart';
 import '../../domain/repositories/daily_closing_repository.dart';
 import 'daily_closing_state.dart';
 
