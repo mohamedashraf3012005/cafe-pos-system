@@ -56,6 +56,7 @@ class Invoices extends Table {
   RealColumn get playStationAmount => real().withDefault(const Constant(0.0))();
   // Task 6: shift closing flag — default false (open shift)
   BoolColumn get isClosedShift => boolean().withDefault(const Constant(false))();
+  IntColumn get shiftClosingId => integer().nullable().references(DailyClosings, #id)();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 

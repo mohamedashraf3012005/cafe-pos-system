@@ -27,7 +27,7 @@ class DailyClosingHistoryPage extends StatelessWidget {
 class _DailyClosingHistoryView extends StatelessWidget {
   const _DailyClosingHistoryView();
 
-  Future<void> _openCashierReportForDate(BuildContext context, String dateStr) async {
+  Future<void> _openCashierReportForShift(BuildContext context, DailyClosingEntity closing) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -36,7 +36,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
 
     try {
       final repo = di.sl<DailyReportRepository>();
-      final report = await repo.getCashierReport(dateStr: dateStr);
+      final report = await repo.getCashierReport(shiftClosingId: closing.id);
       if (context.mounted) {
         Navigator.pop(context);
         await showCashierReportDialog(context, report);
@@ -46,7 +46,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('خطأ أثناء إنشاء تقرير الكاشير لهذا اليوم: ${e.toString()}'),
+            content: Text('خطأ أثناء إنشاء تقرير الكاشير لهذه الوردية: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -139,7 +139,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
             label: const Text('تقرير الكاشير 📋', style: TextStyle(fontWeight: FontWeight.bold)),
             onPressed: () {
               Navigator.pop(ctx);
-              _openCashierReportForDate(context, closing.closingDate);
+              _openCashierReportForShift(context, closing);
             },
           ),
           ElevatedButton.icon(
@@ -152,7 +152,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
             label: const Text('فواتير الوردية', style: TextStyle(fontWeight: FontWeight.bold)),
             onPressed: () {
               Navigator.pop(ctx);
-              _showDayInvoices(context, closing.closingDate);
+              _showShiftInvoices(context, closing.id, closing.closingDate, closing.closingTime);
             },
           ),
         ],
@@ -229,7 +229,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
     );
   }
 
-  void _showDayInvoices(BuildContext context, String dateStr) {
+  void _showShiftInvoices(BuildContext context, int shiftClosingId, String dateStr, String timeStr) {
     final cubit = context.read<DailyClosingCubit>();
     showDialog(
       context: context,
@@ -240,14 +240,14 @@ class _DailyClosingHistoryView extends StatelessWidget {
           children: [
             const Icon(Icons.receipt_long_rounded, color: AppColors.secondary),
             const SizedBox(width: 10),
-            Text('فواتير يوم $dateStr', style: const TextStyle(color: Colors.white, fontSize: 18)),
+            Text('فواتير وردية $dateStr ($timeStr)', style: const TextStyle(color: Colors.white, fontSize: 18)),
           ],
         ),
         content: SizedBox(
           width: 550,
           height: 420,
           child: FutureBuilder<List<InvoiceDetailEntity>>(
-            future: cubit.getInvoicesForClosingDate(dateStr),
+            future: cubit.getInvoicesForShift(shiftClosingId),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -257,7 +257,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
               }
               final invoices = snapshot.data ?? [];
               if (invoices.isEmpty) {
-                return const Center(child: Text('لا توجد فواتير مسجلة لهذا اليوم', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)));
+                return const Center(child: Text('لا توجد فواتير مسجلة لهذه الوردية', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)));
               }
 
               return ListView.builder(
@@ -455,7 +455,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
                           ),
                           icon: const Icon(Icons.assessment, size: 16),
                           label: const Text('تقرير الكاشير 📋', style: TextStyle(fontSize: 12)),
-                          onPressed: () => _openCashierReportForDate(context, closing.closingDate),
+                          onPressed: () => _openCashierReportForShift(context, closing),
                         ),
                         const SizedBox(width: 8),
                         const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 16),

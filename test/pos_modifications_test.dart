@@ -396,5 +396,88 @@ void main() {
       expect(closingShift2.netCashAfterExpenses, equals(1720.0)); // 1800 - 80
       expect(closingShift2.netRevenueAfterExpenses, equals(2420.0)); // 2500 - 80
     });
+
+    test('CashierReportEntity distinguishes open shifts from specific closed shifts', () {
+      final now = DateTime.now();
+
+      // Open shift cashier report
+      final openReport = CashierReportEntity(
+        date: now,
+        isOpenShift: true,
+        shiftClosingId: null,
+        shiftTime: 'الوردية الحالية',
+        invoiceCount: 5,
+        totalRevenue: 350.0,
+        cashTotal: 300.0,
+        walletTotal: 50.0,
+        instapayTotal: 0.0,
+        playStationTotal: 0.0,
+        playStationCount: 0,
+        totalQuantitySold: 8,
+        items: const [],
+        expensesTotal: 50.0,
+      );
+
+      expect(openReport.isOpenShift, isTrue);
+      expect(openReport.shiftClosingId, isNull);
+      expect(openReport.netCashAfterExpenses, equals(250.0));
+
+      // Separate closed shift report on the same day
+      final shift1Report = CashierReportEntity(
+        date: now,
+        isOpenShift: false,
+        shiftClosingId: 101,
+        shiftTime: '15:30',
+        invoiceCount: 15,
+        totalRevenue: 1200.0,
+        cashTotal: 800.0,
+        walletTotal: 200.0,
+        instapayTotal: 200.0,
+        playStationTotal: 100.0,
+        playStationCount: 1,
+        totalQuantitySold: 25,
+        items: const [
+          CashierReportItemEntity(productName: 'لاتيه', quantity: 15, unitPrice: 40.0, totalPrice: 600.0),
+        ],
+        expensesTotal: 100.0,
+      );
+
+      // Another separate closed shift report on the exact same day
+      final shift2Report = CashierReportEntity(
+        date: now,
+        isOpenShift: false,
+        shiftClosingId: 102,
+        shiftTime: '23:30',
+        invoiceCount: 22,
+        totalRevenue: 1850.0,
+        cashTotal: 1300.0,
+        walletTotal: 350.0,
+        instapayTotal: 200.0,
+        playStationTotal: 200.0,
+        playStationCount: 2,
+        totalQuantitySold: 40,
+        items: const [
+          CashierReportItemEntity(productName: 'اسبريسو', quantity: 25, unitPrice: 30.0, totalPrice: 750.0),
+        ],
+        expensesTotal: 80.0,
+      );
+
+      // Verify Shift 1 and Shift 2 are completely independent and not bundled together
+      expect(shift1Report.isOpenShift, isFalse);
+      expect(shift1Report.shiftClosingId, equals(101));
+      expect(shift1Report.shiftTime, equals('15:30'));
+      expect(shift1Report.totalRevenue, equals(1200.0));
+      expect(shift1Report.items.first.productName, equals('لاتيه'));
+
+      expect(shift2Report.isOpenShift, isFalse);
+      expect(shift2Report.shiftClosingId, equals(102));
+      expect(shift2Report.shiftTime, equals('23:30'));
+      expect(shift2Report.totalRevenue, equals(1850.0));
+      expect(shift2Report.items.first.productName, equals('اسبريسو'));
+
+      // Ensure totals are not combined
+      expect(shift1Report.totalRevenue + shift2Report.totalRevenue, equals(3050.0));
+      expect(shift1Report.invoiceCount != shift2Report.invoiceCount, isTrue);
+    });
   });
 }

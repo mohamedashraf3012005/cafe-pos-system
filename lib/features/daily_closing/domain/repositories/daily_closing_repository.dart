@@ -26,6 +26,12 @@ abstract class DailyClosingRepository {
   /// Get all invoices for a given calendar date (yyyy-MM-dd).
   Future<List<InvoiceDetailEntity>> getInvoicesForClosingDate(String dateStr);
 
+  /// Get all invoices associated with a specific shift closing.
+  Future<List<InvoiceDetailEntity>> getInvoicesForShift(int shiftClosingId);
+
+  /// Get all shift closings on a specific date (yyyy-MM-dd).
+  Future<List<DailyClosingEntity>> getClosingsForDate(String dateStr);
+
   /// Get full invoice details with items snapshot (with graceful fallback for older invoices).
   Future<InvoiceDetailEntity?> getInvoiceDetails(int invoiceId);
 

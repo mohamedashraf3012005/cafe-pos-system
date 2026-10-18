@@ -28,6 +28,9 @@ class CashierExpenseItemEntity {
 
 class CashierReportEntity {
   final DateTime date;
+  final int? shiftClosingId;
+  final String? shiftTime;
+  final bool isOpenShift;
   final int invoiceCount;
   final double totalRevenue;
   final double cashTotal;
@@ -46,6 +49,9 @@ class CashierReportEntity {
 
   const CashierReportEntity({
     required this.date,
+    this.shiftClosingId,
+    this.shiftTime,
+    this.isOpenShift = false,
     required this.invoiceCount,
     required this.totalRevenue,
     required this.cashTotal,

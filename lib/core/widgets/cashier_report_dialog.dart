@@ -39,10 +39,13 @@ class _CashierReportDialogContentState extends State<_CashierReportDialogContent
       }
     }
 
-    final isToday = DateFormat('yyyy/MM/dd').format(r.date) == DateFormat('yyyy/MM/dd').format(DateTime.now());
-    final headerTitle = isToday
-        ? '<b>📊 تقرير تقفيل الوردية ومبيعات الكاشير - Cafe POS</b>'
-        : '<b>📊 تقرير تقفيل وردية يوم ($dateStr) - Cafe POS</b>';
+    final headerTitle = r.isOpenShift
+        ? '<b>📊 تقرير كاشير الوردية الحالية (مفتوحة) - Cafe POS</b>'
+        : '<b>📊 تقرير كاشير وردية (${r.shiftTime ?? timeStr}) - Cafe POS</b>';
+
+    final shiftBadge = r.isOpenShift
+        ? '🟢 <b>حالة الوردية:</b> الوردية الحالية (قيد العمل)'
+        : '🔒 <b>الوردية:</b> وردية مغلقة #${r.shiftClosingId ?? ''} (وقت التقفيل: ${r.shiftTime ?? timeStr})';
 
     final expBuf = StringBuffer();
     if (r.expenses.isNotEmpty) {
@@ -57,6 +60,7 @@ class _CashierReportDialogContentState extends State<_CashierReportDialogContent
     return '''
 $headerTitle
 
+$shiftBadge
 <b>📅 تاريخ الوردية:</b> $dateStr
 <b>⏰ وقت استخراج التقرير:</b> $timeStr
 <b>عدد الفواتير:</b> ${r.invoiceCount} فاتورة
@@ -205,18 +209,47 @@ ${r.playStationTotal > 0 ? '\n🎮 <b>جلسات بلايستيشن:</b> ${r.pla
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'تقرير تقفيل الوردية ومبيعات الكاشير',
-                        style: TextStyle(
+                      Text(
+                        report.isOpenShift
+                            ? 'تقرير كاشير الوردية الحالية (مفتوحة)'
+                            : 'تقرير كاشير الوردية #${report.shiftClosingId ?? ''} (${report.shiftTime ?? formattedDate})',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'تاريخ ووقت التقرير: $formattedDate',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: report.isOpenShift ? AppColors.tableFree.withAlpha(40) : AppColors.secondary.withAlpha(40),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: report.isOpenShift ? AppColors.tableFree.withAlpha(120) : AppColors.secondary.withAlpha(120),
+                              ),
+                            ),
+                            child: Text(
+                              report.isOpenShift
+                                  ? '🟢 وردية مفتوحة'
+                                  : '🔒 وردية مغلقة #${report.shiftClosingId ?? ''}',
+                              style: TextStyle(
+                                color: report.isOpenShift ? AppColors.tableFree : AppColors.secondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            report.isOpenShift
+                                ? 'استخراج: $formattedDate'
+                                : 'تاريخ: ${DateFormat('yyyy/MM/dd').format(report.date)} • وقت التقفيل: ${report.shiftTime ?? ''}',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                        ],
                       ),
                     ],
                   ),

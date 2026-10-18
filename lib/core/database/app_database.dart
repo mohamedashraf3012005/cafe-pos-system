@@ -23,7 +23,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
   @override
-  int get schemaVersion => 8; // v8: Expenses table, Shift closing, expensesTotal
+  int get schemaVersion => 9; // v9: shiftClosingId on Invoices for per-shift cashier reports
 
   @override
   MigrationStrategy get migration {
@@ -141,6 +141,11 @@ class AppDatabase extends _$AppDatabase {
             await customStatement('DROP TABLE daily_closings;');
             await customStatement('ALTER TABLE daily_closings_v8 RENAME TO daily_closings;');
           } catch (_) {}
+        }
+
+        // v8→v9: shiftClosingId on Invoices for per-shift isolation
+        if (from < 9) {
+          await safeAddColumn(invoices, invoices.shiftClosingId);
         }
       },
     );

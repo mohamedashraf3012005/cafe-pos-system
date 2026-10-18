@@ -13,7 +13,12 @@ abstract class DailyReportRepository {
   Future<void> closeShift();
 
   /// Generate a detailed Cashier Report of all items sold and payment breakdown.
-  /// If [date] or [dateStr] is provided, generates the report for that historical day.
-  /// If null, generates for current open shift.
-  Future<CashierReportEntity> getCashierReport({DateTime? date, String? dateStr});
+  /// If [shiftClosingId] is provided, generates the report strictly for that shift.
+  /// If null and [date] or [dateStr] provided, generates for that day's shift.
+  /// If all null, generates for current open shift.
+  Future<CashierReportEntity> getCashierReport({
+    int? shiftClosingId,
+    DateTime? date,
+    String? dateStr,
+  });
 }

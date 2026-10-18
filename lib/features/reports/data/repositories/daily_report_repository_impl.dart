@@ -60,11 +60,36 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
   }
 
   @override
-  Future<CashierReportEntity> getCashierReport({DateTime? date, String? dateStr}) async {
+  Future<CashierReportEntity> getCashierReport({
+    int? shiftClosingId,
+    DateTime? date,
+    String? dateStr,
+  }) async {
     final DateTime targetDate;
-    final bool isHistorical = date != null || dateStr != null;
+    final bool isOpenShift = shiftClosingId == null && date == null && dateStr == null;
+    String? shiftTime;
+    DailyClosing? closingRow;
 
-    if (date != null) {
+    if (shiftClosingId != null) {
+      closingRow = await (db.select(db.dailyClosings)
+            ..where((d) => d.id.equals(shiftClosingId)))
+          .getSingleOrNull();
+
+      if (closingRow != null) {
+        shiftTime = closingRow.closingTime;
+        final parts = closingRow.closingDate.split('-');
+        if (parts.length == 3) {
+          final y = int.tryParse(parts[0]) ?? 2026;
+          final m = int.tryParse(parts[1]) ?? 1;
+          final d = int.tryParse(parts[2]) ?? 1;
+          targetDate = DateTime(y, m, d);
+        } else {
+          targetDate = closingRow.createdAt;
+        }
+      } else {
+        targetDate = DateTime.now();
+      }
+    } else if (date != null) {
       targetDate = date;
     } else if (dateStr != null) {
       final parts = dateStr.split('-');
@@ -78,10 +103,62 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
       }
     } else {
       targetDate = DateTime.now();
+      shiftTime = 'الوردية الحالية';
+    }
+
+    // If date was specified without shiftClosingId, check if a shift exists for that date
+    if (shiftClosingId == null && (date != null || dateStr != null)) {
+      final dateFormatted = '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}';
+      final matchingClosing = await (db.select(db.dailyClosings)
+            ..where((d) => d.closingDate.equals(dateFormatted))
+            ..orderBy([(d) => OrderingTerm.desc(d.createdAt)])
+            ..limit(1))
+          .getSingleOrNull();
+
+      if (matchingClosing != null) {
+        return getCashierReport(shiftClosingId: matchingClosing.id);
+      }
     }
 
     final List<Invoice> targetInvoices;
-    if (isHistorical) {
+    final List<Expense> targetExpenses;
+
+    if (shiftClosingId != null) {
+      // Shift-isolated invoices & expenses
+      var invs = await (db.select(db.invoices)
+            ..where((inv) => inv.shiftClosingId.equals(shiftClosingId))
+            ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
+          .get();
+
+      // Graceful fallback for older records before migration v9
+      if (invs.isEmpty && closingRow != null) {
+        final startOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
+        final endOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59, 59, 999);
+        invs = await (db.select(db.invoices)
+              ..where((inv) =>
+                  inv.createdAt.isBiggerOrEqualValue(startOfDay) &
+                  inv.createdAt.isSmallerOrEqualValue(endOfDay))
+              ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
+            .get();
+      }
+      targetInvoices = invs;
+
+      targetExpenses = await (db.select(db.expenses)
+            ..where((e) => e.shiftClosingId.equals(shiftClosingId))
+            ..orderBy([(e) => OrderingTerm.asc(e.createdAt)]))
+          .get();
+    } else if (isOpenShift) {
+      // Current active shift only
+      targetInvoices = await (db.select(db.invoices)
+            ..where((inv) => inv.isClosedShift.equals(false))
+            ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
+          .get();
+
+      targetExpenses = await (db.select(db.expenses)
+            ..where((e) => e.isClosedShift.equals(false))
+            ..orderBy([(e) => OrderingTerm.asc(e.createdAt)]))
+          .get();
+    } else {
       final startOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
       final endOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59, 59, 999);
 
@@ -91,27 +168,11 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
                 inv.createdAt.isSmallerOrEqualValue(endOfDay))
             ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
           .get();
-    } else {
-      targetInvoices = await (db.select(db.invoices)
-            ..where((inv) => inv.isClosedShift.equals(false))
-            ..orderBy([(inv) => OrderingTerm.asc(inv.createdAt)]))
-          .get();
-    }
-
-    final List<Expense> targetExpenses;
-    if (isHistorical) {
-      final startOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day);
-      final endOfDay = DateTime(targetDate.year, targetDate.month, targetDate.day, 23, 59, 59, 999);
 
       targetExpenses = await (db.select(db.expenses)
             ..where((e) =>
                 e.createdAt.isBiggerOrEqualValue(startOfDay) &
                 e.createdAt.isSmallerOrEqualValue(endOfDay))
-            ..orderBy([(e) => OrderingTerm.asc(e.createdAt)]))
-          .get();
-    } else {
-      targetExpenses = await (db.select(db.expenses)
-            ..where((e) => e.isClosedShift.equals(false))
             ..orderBy([(e) => OrderingTerm.asc(e.createdAt)]))
           .get();
     }
@@ -128,17 +189,12 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
     final expensesTotal = expenseEntities.fold<double>(0.0, (sum, e) => sum + e.amount);
 
     if (targetInvoices.isEmpty) {
-      // Check if a shift/daily closing record exists for this date
-      final targetDateFormatted = '${targetDate.year}-${targetDate.month.toString().padLeft(2, '0')}-${targetDate.day.toString().padLeft(2, '0')}';
-      final closingRow = await (db.select(db.dailyClosings)
-            ..where((d) => d.closingDate.equals(targetDateFormatted))
-            ..orderBy([(d) => OrderingTerm.desc(d.createdAt)])
-            ..limit(1))
-          .getSingleOrNull();
-
       if (closingRow != null) {
         return CashierReportEntity(
           date: targetDate,
+          shiftClosingId: shiftClosingId,
+          shiftTime: shiftTime,
+          isOpenShift: isOpenShift,
           invoiceCount: closingRow.invoiceCount,
           totalRevenue: closingRow.netSales,
           cashTotal: closingRow.cashTotal,
@@ -156,6 +212,9 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
 
       return CashierReportEntity(
         date: targetDate,
+        shiftClosingId: shiftClosingId,
+        shiftTime: shiftTime,
+        isOpenShift: isOpenShift,
         invoiceCount: 0,
         totalRevenue: 0.0,
         cashTotal: 0.0,
@@ -272,6 +331,9 @@ class DailyReportRepositoryImpl implements DailyReportRepository {
 
     return CashierReportEntity(
       date: targetDate,
+      shiftClosingId: shiftClosingId,
+      shiftTime: shiftTime,
+      isOpenShift: isOpenShift,
       invoiceCount: targetInvoices.length,
       totalRevenue: totalRevenue,
       cashTotal: cashTotal,

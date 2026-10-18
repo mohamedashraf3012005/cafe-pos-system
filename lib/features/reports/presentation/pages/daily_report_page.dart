@@ -289,7 +289,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
     }
   }
 
-  Future<void> _openCashierReport(BuildContext context, {DateTime? date}) async {
+  Future<void> _openCashierReport(BuildContext context, {int? shiftClosingId, DateTime? date}) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -297,7 +297,10 @@ class _DailyReportViewState extends State<_DailyReportView> {
     );
 
     try {
-      final report = await context.read<DailyReportCubit>().getCashierReport(date: date);
+      final report = await context.read<DailyReportCubit>().getCashierReport(
+            shiftClosingId: shiftClosingId,
+            date: date,
+          );
       if (context.mounted) {
         Navigator.pop(context);
         await showCashierReportDialog(context, report);
@@ -321,9 +324,9 @@ class _DailyReportViewState extends State<_DailyReportView> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      helpText: 'اختر تاريخ يومية التقرير',
+      helpText: 'اختر تاريخ الوردية',
       cancelText: 'إلغاء',
-      confirmText: 'عرض التقرير',
+      confirmText: 'عرض الورديات',
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
@@ -339,7 +342,80 @@ class _DailyReportViewState extends State<_DailyReportView> {
     );
 
     if (pickedDate != null && context.mounted) {
-      await _openCashierReport(context, date: pickedDate);
+      final dateStr = DateFormat('yyyy-MM-dd').format(pickedDate);
+      final closings = await context.read<DailyClosingCubit>().getClosingsForDate(dateStr);
+      if (!context.mounted) return;
+
+      if (closings.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('لا توجد أي ورديات مقفلة مسجلة في تاريخ $dateStr'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      } else if (closings.length == 1) {
+        await _openCashierReport(context, shiftClosingId: closings.first.id);
+      } else {
+        // Show dialog to pick shift
+        await showDialog(
+          context: context,
+          builder: (dialogCtx) => AlertDialog(
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.schedule, color: AppColors.secondary),
+                const SizedBox(width: 8),
+                Text('اختر الوردية ($dateStr)', style: const TextStyle(color: Colors.white, fontSize: 18)),
+              ],
+            ),
+            content: SizedBox(
+              width: 440,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'يوجد أكثر من وردية في هذا اليوم، اختر الوردية لعرض تقرير الكاشير المنفصل الخاص بها:',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  ...closings.map((closing) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.white12),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.assessment, color: AppColors.primary),
+                          title: Text(
+                            'تقفيل وردية (${closing.closingTime})',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            'الفواتير: ${closing.invoiceCount} • المبيعات: ${closing.netSales.toStringAsFixed(2)} ج.م',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.textSecondary, size: 14),
+                          onTap: () {
+                            Navigator.pop(dialogCtx);
+                            _openCashierReport(context, shiftClosingId: closing.id);
+                          },
+                        ),
+                      )),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('إلغاء', style: TextStyle(color: Colors.white54)),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -352,7 +428,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
           ElevatedButton.icon(
             icon: const Icon(Icons.assessment, color: Colors.white, size: 18),
             label: const Text(
-              'تقرير الكاشير 📋',
+              'تقرير كاشير الوردية الحالية 📋',
               style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
@@ -366,7 +442,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
           OutlinedButton.icon(
             icon: const Icon(Icons.date_range_rounded, color: AppColors.secondary, size: 18),
             label: const Text(
-              'تقرير تاريخ سابق 📅',
+              'تقرير وردية سابقة 📅',
               style: TextStyle(color: AppColors.secondary, fontSize: 13, fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
@@ -437,6 +513,8 @@ class _DailyReportViewState extends State<_DailyReportView> {
             );
             // Reload daily report page to reflect closed shift
             context.read<DailyReportCubit>().loadReport();
+            // Immediately open cashier report for the closed shift
+            _openCashierReport(context, shiftClosingId: state.closing.id);
           } else if (state is DailyClosingError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message), backgroundColor: AppColors.error),

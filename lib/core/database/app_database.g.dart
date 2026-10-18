@@ -1515,574 +1515,6 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
   }
 }
 
-class $InvoicesTable extends Invoices with TableInfo<$InvoicesTable, Invoice> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $InvoicesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _orderIdMeta =
-      const VerificationMeta('orderId');
-  @override
-  late final GeneratedColumn<int> orderId = GeneratedColumn<int>(
-      'order_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES orders (id)'));
-  static const VerificationMeta _invoiceNumberMeta =
-      const VerificationMeta('invoiceNumber');
-  @override
-  late final GeneratedColumn<String> invoiceNumber = GeneratedColumn<String>(
-      'invoice_number', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
-  static const VerificationMeta _subtotalMeta =
-      const VerificationMeta('subtotal');
-  @override
-  late final GeneratedColumn<double> subtotal = GeneratedColumn<double>(
-      'subtotal', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _taxAmountMeta =
-      const VerificationMeta('taxAmount');
-  @override
-  late final GeneratedColumn<double> taxAmount = GeneratedColumn<double>(
-      'tax_amount', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _serviceChargeMeta =
-      const VerificationMeta('serviceCharge');
-  @override
-  late final GeneratedColumn<double> serviceCharge = GeneratedColumn<double>(
-      'service_charge', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _grandTotalMeta =
-      const VerificationMeta('grandTotal');
-  @override
-  late final GeneratedColumn<double> grandTotal = GeneratedColumn<double>(
-      'grand_total', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _paymentMethodMeta =
-      const VerificationMeta('paymentMethod');
-  @override
-  late final GeneratedColumn<String> paymentMethod = GeneratedColumn<String>(
-      'payment_method', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('cash'));
-  static const VerificationMeta _playStationAmountMeta =
-      const VerificationMeta('playStationAmount');
-  @override
-  late final GeneratedColumn<double> playStationAmount =
-      GeneratedColumn<double>('play_station_amount', aliasedName, false,
-          type: DriftSqlType.double,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(0.0));
-  static const VerificationMeta _isClosedShiftMeta =
-      const VerificationMeta('isClosedShift');
-  @override
-  late final GeneratedColumn<bool> isClosedShift = GeneratedColumn<bool>(
-      'is_closed_shift', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_closed_shift" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        orderId,
-        invoiceNumber,
-        subtotal,
-        taxAmount,
-        serviceCharge,
-        grandTotal,
-        paymentMethod,
-        playStationAmount,
-        isClosedShift,
-        createdAt
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'invoices';
-  @override
-  VerificationContext validateIntegrity(Insertable<Invoice> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('order_id')) {
-      context.handle(_orderIdMeta,
-          orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta));
-    } else if (isInserting) {
-      context.missing(_orderIdMeta);
-    }
-    if (data.containsKey('invoice_number')) {
-      context.handle(
-          _invoiceNumberMeta,
-          invoiceNumber.isAcceptableOrUnknown(
-              data['invoice_number']!, _invoiceNumberMeta));
-    } else if (isInserting) {
-      context.missing(_invoiceNumberMeta);
-    }
-    if (data.containsKey('subtotal')) {
-      context.handle(_subtotalMeta,
-          subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta));
-    } else if (isInserting) {
-      context.missing(_subtotalMeta);
-    }
-    if (data.containsKey('tax_amount')) {
-      context.handle(_taxAmountMeta,
-          taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta));
-    } else if (isInserting) {
-      context.missing(_taxAmountMeta);
-    }
-    if (data.containsKey('service_charge')) {
-      context.handle(
-          _serviceChargeMeta,
-          serviceCharge.isAcceptableOrUnknown(
-              data['service_charge']!, _serviceChargeMeta));
-    } else if (isInserting) {
-      context.missing(_serviceChargeMeta);
-    }
-    if (data.containsKey('grand_total')) {
-      context.handle(
-          _grandTotalMeta,
-          grandTotal.isAcceptableOrUnknown(
-              data['grand_total']!, _grandTotalMeta));
-    } else if (isInserting) {
-      context.missing(_grandTotalMeta);
-    }
-    if (data.containsKey('payment_method')) {
-      context.handle(
-          _paymentMethodMeta,
-          paymentMethod.isAcceptableOrUnknown(
-              data['payment_method']!, _paymentMethodMeta));
-    }
-    if (data.containsKey('play_station_amount')) {
-      context.handle(
-          _playStationAmountMeta,
-          playStationAmount.isAcceptableOrUnknown(
-              data['play_station_amount']!, _playStationAmountMeta));
-    }
-    if (data.containsKey('is_closed_shift')) {
-      context.handle(
-          _isClosedShiftMeta,
-          isClosedShift.isAcceptableOrUnknown(
-              data['is_closed_shift']!, _isClosedShiftMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Invoice map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Invoice(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      orderId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}order_id'])!,
-      invoiceNumber: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}invoice_number'])!,
-      subtotal: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}subtotal'])!,
-      taxAmount: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}tax_amount'])!,
-      serviceCharge: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}service_charge'])!,
-      grandTotal: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}grand_total'])!,
-      paymentMethod: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}payment_method'])!,
-      playStationAmount: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}play_station_amount'])!,
-      isClosedShift: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_closed_shift'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-    );
-  }
-
-  @override
-  $InvoicesTable createAlias(String alias) {
-    return $InvoicesTable(attachedDatabase, alias);
-  }
-}
-
-class Invoice extends DataClass implements Insertable<Invoice> {
-  final int id;
-  final int orderId;
-  final String invoiceNumber;
-  final double subtotal;
-  final double taxAmount;
-  final double serviceCharge;
-  final double grandTotal;
-  final String paymentMethod;
-  final double playStationAmount;
-  final bool isClosedShift;
-  final DateTime createdAt;
-  const Invoice(
-      {required this.id,
-      required this.orderId,
-      required this.invoiceNumber,
-      required this.subtotal,
-      required this.taxAmount,
-      required this.serviceCharge,
-      required this.grandTotal,
-      required this.paymentMethod,
-      required this.playStationAmount,
-      required this.isClosedShift,
-      required this.createdAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['order_id'] = Variable<int>(orderId);
-    map['invoice_number'] = Variable<String>(invoiceNumber);
-    map['subtotal'] = Variable<double>(subtotal);
-    map['tax_amount'] = Variable<double>(taxAmount);
-    map['service_charge'] = Variable<double>(serviceCharge);
-    map['grand_total'] = Variable<double>(grandTotal);
-    map['payment_method'] = Variable<String>(paymentMethod);
-    map['play_station_amount'] = Variable<double>(playStationAmount);
-    map['is_closed_shift'] = Variable<bool>(isClosedShift);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  InvoicesCompanion toCompanion(bool nullToAbsent) {
-    return InvoicesCompanion(
-      id: Value(id),
-      orderId: Value(orderId),
-      invoiceNumber: Value(invoiceNumber),
-      subtotal: Value(subtotal),
-      taxAmount: Value(taxAmount),
-      serviceCharge: Value(serviceCharge),
-      grandTotal: Value(grandTotal),
-      paymentMethod: Value(paymentMethod),
-      playStationAmount: Value(playStationAmount),
-      isClosedShift: Value(isClosedShift),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory Invoice.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Invoice(
-      id: serializer.fromJson<int>(json['id']),
-      orderId: serializer.fromJson<int>(json['orderId']),
-      invoiceNumber: serializer.fromJson<String>(json['invoiceNumber']),
-      subtotal: serializer.fromJson<double>(json['subtotal']),
-      taxAmount: serializer.fromJson<double>(json['taxAmount']),
-      serviceCharge: serializer.fromJson<double>(json['serviceCharge']),
-      grandTotal: serializer.fromJson<double>(json['grandTotal']),
-      paymentMethod: serializer.fromJson<String>(json['paymentMethod']),
-      playStationAmount: serializer.fromJson<double>(json['playStationAmount']),
-      isClosedShift: serializer.fromJson<bool>(json['isClosedShift']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'orderId': serializer.toJson<int>(orderId),
-      'invoiceNumber': serializer.toJson<String>(invoiceNumber),
-      'subtotal': serializer.toJson<double>(subtotal),
-      'taxAmount': serializer.toJson<double>(taxAmount),
-      'serviceCharge': serializer.toJson<double>(serviceCharge),
-      'grandTotal': serializer.toJson<double>(grandTotal),
-      'paymentMethod': serializer.toJson<String>(paymentMethod),
-      'playStationAmount': serializer.toJson<double>(playStationAmount),
-      'isClosedShift': serializer.toJson<bool>(isClosedShift),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  Invoice copyWith(
-          {int? id,
-          int? orderId,
-          String? invoiceNumber,
-          double? subtotal,
-          double? taxAmount,
-          double? serviceCharge,
-          double? grandTotal,
-          String? paymentMethod,
-          double? playStationAmount,
-          bool? isClosedShift,
-          DateTime? createdAt}) =>
-      Invoice(
-        id: id ?? this.id,
-        orderId: orderId ?? this.orderId,
-        invoiceNumber: invoiceNumber ?? this.invoiceNumber,
-        subtotal: subtotal ?? this.subtotal,
-        taxAmount: taxAmount ?? this.taxAmount,
-        serviceCharge: serviceCharge ?? this.serviceCharge,
-        grandTotal: grandTotal ?? this.grandTotal,
-        paymentMethod: paymentMethod ?? this.paymentMethod,
-        playStationAmount: playStationAmount ?? this.playStationAmount,
-        isClosedShift: isClosedShift ?? this.isClosedShift,
-        createdAt: createdAt ?? this.createdAt,
-      );
-  Invoice copyWithCompanion(InvoicesCompanion data) {
-    return Invoice(
-      id: data.id.present ? data.id.value : this.id,
-      orderId: data.orderId.present ? data.orderId.value : this.orderId,
-      invoiceNumber: data.invoiceNumber.present
-          ? data.invoiceNumber.value
-          : this.invoiceNumber,
-      subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
-      taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
-      serviceCharge: data.serviceCharge.present
-          ? data.serviceCharge.value
-          : this.serviceCharge,
-      grandTotal:
-          data.grandTotal.present ? data.grandTotal.value : this.grandTotal,
-      paymentMethod: data.paymentMethod.present
-          ? data.paymentMethod.value
-          : this.paymentMethod,
-      playStationAmount: data.playStationAmount.present
-          ? data.playStationAmount.value
-          : this.playStationAmount,
-      isClosedShift: data.isClosedShift.present
-          ? data.isClosedShift.value
-          : this.isClosedShift,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Invoice(')
-          ..write('id: $id, ')
-          ..write('orderId: $orderId, ')
-          ..write('invoiceNumber: $invoiceNumber, ')
-          ..write('subtotal: $subtotal, ')
-          ..write('taxAmount: $taxAmount, ')
-          ..write('serviceCharge: $serviceCharge, ')
-          ..write('grandTotal: $grandTotal, ')
-          ..write('paymentMethod: $paymentMethod, ')
-          ..write('playStationAmount: $playStationAmount, ')
-          ..write('isClosedShift: $isClosedShift, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      id,
-      orderId,
-      invoiceNumber,
-      subtotal,
-      taxAmount,
-      serviceCharge,
-      grandTotal,
-      paymentMethod,
-      playStationAmount,
-      isClosedShift,
-      createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Invoice &&
-          other.id == this.id &&
-          other.orderId == this.orderId &&
-          other.invoiceNumber == this.invoiceNumber &&
-          other.subtotal == this.subtotal &&
-          other.taxAmount == this.taxAmount &&
-          other.serviceCharge == this.serviceCharge &&
-          other.grandTotal == this.grandTotal &&
-          other.paymentMethod == this.paymentMethod &&
-          other.playStationAmount == this.playStationAmount &&
-          other.isClosedShift == this.isClosedShift &&
-          other.createdAt == this.createdAt);
-}
-
-class InvoicesCompanion extends UpdateCompanion<Invoice> {
-  final Value<int> id;
-  final Value<int> orderId;
-  final Value<String> invoiceNumber;
-  final Value<double> subtotal;
-  final Value<double> taxAmount;
-  final Value<double> serviceCharge;
-  final Value<double> grandTotal;
-  final Value<String> paymentMethod;
-  final Value<double> playStationAmount;
-  final Value<bool> isClosedShift;
-  final Value<DateTime> createdAt;
-  const InvoicesCompanion({
-    this.id = const Value.absent(),
-    this.orderId = const Value.absent(),
-    this.invoiceNumber = const Value.absent(),
-    this.subtotal = const Value.absent(),
-    this.taxAmount = const Value.absent(),
-    this.serviceCharge = const Value.absent(),
-    this.grandTotal = const Value.absent(),
-    this.paymentMethod = const Value.absent(),
-    this.playStationAmount = const Value.absent(),
-    this.isClosedShift = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  InvoicesCompanion.insert({
-    this.id = const Value.absent(),
-    required int orderId,
-    required String invoiceNumber,
-    required double subtotal,
-    required double taxAmount,
-    required double serviceCharge,
-    required double grandTotal,
-    this.paymentMethod = const Value.absent(),
-    this.playStationAmount = const Value.absent(),
-    this.isClosedShift = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  })  : orderId = Value(orderId),
-        invoiceNumber = Value(invoiceNumber),
-        subtotal = Value(subtotal),
-        taxAmount = Value(taxAmount),
-        serviceCharge = Value(serviceCharge),
-        grandTotal = Value(grandTotal);
-  static Insertable<Invoice> custom({
-    Expression<int>? id,
-    Expression<int>? orderId,
-    Expression<String>? invoiceNumber,
-    Expression<double>? subtotal,
-    Expression<double>? taxAmount,
-    Expression<double>? serviceCharge,
-    Expression<double>? grandTotal,
-    Expression<String>? paymentMethod,
-    Expression<double>? playStationAmount,
-    Expression<bool>? isClosedShift,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (orderId != null) 'order_id': orderId,
-      if (invoiceNumber != null) 'invoice_number': invoiceNumber,
-      if (subtotal != null) 'subtotal': subtotal,
-      if (taxAmount != null) 'tax_amount': taxAmount,
-      if (serviceCharge != null) 'service_charge': serviceCharge,
-      if (grandTotal != null) 'grand_total': grandTotal,
-      if (paymentMethod != null) 'payment_method': paymentMethod,
-      if (playStationAmount != null) 'play_station_amount': playStationAmount,
-      if (isClosedShift != null) 'is_closed_shift': isClosedShift,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  InvoicesCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? orderId,
-      Value<String>? invoiceNumber,
-      Value<double>? subtotal,
-      Value<double>? taxAmount,
-      Value<double>? serviceCharge,
-      Value<double>? grandTotal,
-      Value<String>? paymentMethod,
-      Value<double>? playStationAmount,
-      Value<bool>? isClosedShift,
-      Value<DateTime>? createdAt}) {
-    return InvoicesCompanion(
-      id: id ?? this.id,
-      orderId: orderId ?? this.orderId,
-      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
-      subtotal: subtotal ?? this.subtotal,
-      taxAmount: taxAmount ?? this.taxAmount,
-      serviceCharge: serviceCharge ?? this.serviceCharge,
-      grandTotal: grandTotal ?? this.grandTotal,
-      paymentMethod: paymentMethod ?? this.paymentMethod,
-      playStationAmount: playStationAmount ?? this.playStationAmount,
-      isClosedShift: isClosedShift ?? this.isClosedShift,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (orderId.present) {
-      map['order_id'] = Variable<int>(orderId.value);
-    }
-    if (invoiceNumber.present) {
-      map['invoice_number'] = Variable<String>(invoiceNumber.value);
-    }
-    if (subtotal.present) {
-      map['subtotal'] = Variable<double>(subtotal.value);
-    }
-    if (taxAmount.present) {
-      map['tax_amount'] = Variable<double>(taxAmount.value);
-    }
-    if (serviceCharge.present) {
-      map['service_charge'] = Variable<double>(serviceCharge.value);
-    }
-    if (grandTotal.present) {
-      map['grand_total'] = Variable<double>(grandTotal.value);
-    }
-    if (paymentMethod.present) {
-      map['payment_method'] = Variable<String>(paymentMethod.value);
-    }
-    if (playStationAmount.present) {
-      map['play_station_amount'] = Variable<double>(playStationAmount.value);
-    }
-    if (isClosedShift.present) {
-      map['is_closed_shift'] = Variable<bool>(isClosedShift.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('InvoicesCompanion(')
-          ..write('id: $id, ')
-          ..write('orderId: $orderId, ')
-          ..write('invoiceNumber: $invoiceNumber, ')
-          ..write('subtotal: $subtotal, ')
-          ..write('taxAmount: $taxAmount, ')
-          ..write('serviceCharge: $serviceCharge, ')
-          ..write('grandTotal: $grandTotal, ')
-          ..write('paymentMethod: $paymentMethod, ')
-          ..write('playStationAmount: $playStationAmount, ')
-          ..write('isClosedShift: $isClosedShift, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $DailyClosingsTable extends DailyClosings
     with TableInfo<$DailyClosingsTable, DailyClosing> {
   @override
@@ -2955,6 +2387,622 @@ class DailyClosingsCompanion extends UpdateCompanion<DailyClosing> {
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $InvoicesTable extends Invoices with TableInfo<$InvoicesTable, Invoice> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InvoicesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _orderIdMeta =
+      const VerificationMeta('orderId');
+  @override
+  late final GeneratedColumn<int> orderId = GeneratedColumn<int>(
+      'order_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES orders (id)'));
+  static const VerificationMeta _invoiceNumberMeta =
+      const VerificationMeta('invoiceNumber');
+  @override
+  late final GeneratedColumn<String> invoiceNumber = GeneratedColumn<String>(
+      'invoice_number', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _subtotalMeta =
+      const VerificationMeta('subtotal');
+  @override
+  late final GeneratedColumn<double> subtotal = GeneratedColumn<double>(
+      'subtotal', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _taxAmountMeta =
+      const VerificationMeta('taxAmount');
+  @override
+  late final GeneratedColumn<double> taxAmount = GeneratedColumn<double>(
+      'tax_amount', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _serviceChargeMeta =
+      const VerificationMeta('serviceCharge');
+  @override
+  late final GeneratedColumn<double> serviceCharge = GeneratedColumn<double>(
+      'service_charge', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _grandTotalMeta =
+      const VerificationMeta('grandTotal');
+  @override
+  late final GeneratedColumn<double> grandTotal = GeneratedColumn<double>(
+      'grand_total', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _paymentMethodMeta =
+      const VerificationMeta('paymentMethod');
+  @override
+  late final GeneratedColumn<String> paymentMethod = GeneratedColumn<String>(
+      'payment_method', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('cash'));
+  static const VerificationMeta _playStationAmountMeta =
+      const VerificationMeta('playStationAmount');
+  @override
+  late final GeneratedColumn<double> playStationAmount =
+      GeneratedColumn<double>('play_station_amount', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _isClosedShiftMeta =
+      const VerificationMeta('isClosedShift');
+  @override
+  late final GeneratedColumn<bool> isClosedShift = GeneratedColumn<bool>(
+      'is_closed_shift', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_closed_shift" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _shiftClosingIdMeta =
+      const VerificationMeta('shiftClosingId');
+  @override
+  late final GeneratedColumn<int> shiftClosingId = GeneratedColumn<int>(
+      'shift_closing_id', aliasedName, true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES daily_closings (id)'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        orderId,
+        invoiceNumber,
+        subtotal,
+        taxAmount,
+        serviceCharge,
+        grandTotal,
+        paymentMethod,
+        playStationAmount,
+        isClosedShift,
+        shiftClosingId,
+        createdAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'invoices';
+  @override
+  VerificationContext validateIntegrity(Insertable<Invoice> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('order_id')) {
+      context.handle(_orderIdMeta,
+          orderId.isAcceptableOrUnknown(data['order_id']!, _orderIdMeta));
+    } else if (isInserting) {
+      context.missing(_orderIdMeta);
+    }
+    if (data.containsKey('invoice_number')) {
+      context.handle(
+          _invoiceNumberMeta,
+          invoiceNumber.isAcceptableOrUnknown(
+              data['invoice_number']!, _invoiceNumberMeta));
+    } else if (isInserting) {
+      context.missing(_invoiceNumberMeta);
+    }
+    if (data.containsKey('subtotal')) {
+      context.handle(_subtotalMeta,
+          subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta));
+    } else if (isInserting) {
+      context.missing(_subtotalMeta);
+    }
+    if (data.containsKey('tax_amount')) {
+      context.handle(_taxAmountMeta,
+          taxAmount.isAcceptableOrUnknown(data['tax_amount']!, _taxAmountMeta));
+    } else if (isInserting) {
+      context.missing(_taxAmountMeta);
+    }
+    if (data.containsKey('service_charge')) {
+      context.handle(
+          _serviceChargeMeta,
+          serviceCharge.isAcceptableOrUnknown(
+              data['service_charge']!, _serviceChargeMeta));
+    } else if (isInserting) {
+      context.missing(_serviceChargeMeta);
+    }
+    if (data.containsKey('grand_total')) {
+      context.handle(
+          _grandTotalMeta,
+          grandTotal.isAcceptableOrUnknown(
+              data['grand_total']!, _grandTotalMeta));
+    } else if (isInserting) {
+      context.missing(_grandTotalMeta);
+    }
+    if (data.containsKey('payment_method')) {
+      context.handle(
+          _paymentMethodMeta,
+          paymentMethod.isAcceptableOrUnknown(
+              data['payment_method']!, _paymentMethodMeta));
+    }
+    if (data.containsKey('play_station_amount')) {
+      context.handle(
+          _playStationAmountMeta,
+          playStationAmount.isAcceptableOrUnknown(
+              data['play_station_amount']!, _playStationAmountMeta));
+    }
+    if (data.containsKey('is_closed_shift')) {
+      context.handle(
+          _isClosedShiftMeta,
+          isClosedShift.isAcceptableOrUnknown(
+              data['is_closed_shift']!, _isClosedShiftMeta));
+    }
+    if (data.containsKey('shift_closing_id')) {
+      context.handle(
+          _shiftClosingIdMeta,
+          shiftClosingId.isAcceptableOrUnknown(
+              data['shift_closing_id']!, _shiftClosingIdMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Invoice map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Invoice(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      orderId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}order_id'])!,
+      invoiceNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}invoice_number'])!,
+      subtotal: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}subtotal'])!,
+      taxAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}tax_amount'])!,
+      serviceCharge: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}service_charge'])!,
+      grandTotal: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}grand_total'])!,
+      paymentMethod: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payment_method'])!,
+      playStationAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}play_station_amount'])!,
+      isClosedShift: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_closed_shift'])!,
+      shiftClosingId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}shift_closing_id']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $InvoicesTable createAlias(String alias) {
+    return $InvoicesTable(attachedDatabase, alias);
+  }
+}
+
+class Invoice extends DataClass implements Insertable<Invoice> {
+  final int id;
+  final int orderId;
+  final String invoiceNumber;
+  final double subtotal;
+  final double taxAmount;
+  final double serviceCharge;
+  final double grandTotal;
+  final String paymentMethod;
+  final double playStationAmount;
+  final bool isClosedShift;
+  final int? shiftClosingId;
+  final DateTime createdAt;
+  const Invoice(
+      {required this.id,
+      required this.orderId,
+      required this.invoiceNumber,
+      required this.subtotal,
+      required this.taxAmount,
+      required this.serviceCharge,
+      required this.grandTotal,
+      required this.paymentMethod,
+      required this.playStationAmount,
+      required this.isClosedShift,
+      this.shiftClosingId,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['order_id'] = Variable<int>(orderId);
+    map['invoice_number'] = Variable<String>(invoiceNumber);
+    map['subtotal'] = Variable<double>(subtotal);
+    map['tax_amount'] = Variable<double>(taxAmount);
+    map['service_charge'] = Variable<double>(serviceCharge);
+    map['grand_total'] = Variable<double>(grandTotal);
+    map['payment_method'] = Variable<String>(paymentMethod);
+    map['play_station_amount'] = Variable<double>(playStationAmount);
+    map['is_closed_shift'] = Variable<bool>(isClosedShift);
+    if (!nullToAbsent || shiftClosingId != null) {
+      map['shift_closing_id'] = Variable<int>(shiftClosingId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  InvoicesCompanion toCompanion(bool nullToAbsent) {
+    return InvoicesCompanion(
+      id: Value(id),
+      orderId: Value(orderId),
+      invoiceNumber: Value(invoiceNumber),
+      subtotal: Value(subtotal),
+      taxAmount: Value(taxAmount),
+      serviceCharge: Value(serviceCharge),
+      grandTotal: Value(grandTotal),
+      paymentMethod: Value(paymentMethod),
+      playStationAmount: Value(playStationAmount),
+      isClosedShift: Value(isClosedShift),
+      shiftClosingId: shiftClosingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shiftClosingId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Invoice.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Invoice(
+      id: serializer.fromJson<int>(json['id']),
+      orderId: serializer.fromJson<int>(json['orderId']),
+      invoiceNumber: serializer.fromJson<String>(json['invoiceNumber']),
+      subtotal: serializer.fromJson<double>(json['subtotal']),
+      taxAmount: serializer.fromJson<double>(json['taxAmount']),
+      serviceCharge: serializer.fromJson<double>(json['serviceCharge']),
+      grandTotal: serializer.fromJson<double>(json['grandTotal']),
+      paymentMethod: serializer.fromJson<String>(json['paymentMethod']),
+      playStationAmount: serializer.fromJson<double>(json['playStationAmount']),
+      isClosedShift: serializer.fromJson<bool>(json['isClosedShift']),
+      shiftClosingId: serializer.fromJson<int?>(json['shiftClosingId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'orderId': serializer.toJson<int>(orderId),
+      'invoiceNumber': serializer.toJson<String>(invoiceNumber),
+      'subtotal': serializer.toJson<double>(subtotal),
+      'taxAmount': serializer.toJson<double>(taxAmount),
+      'serviceCharge': serializer.toJson<double>(serviceCharge),
+      'grandTotal': serializer.toJson<double>(grandTotal),
+      'paymentMethod': serializer.toJson<String>(paymentMethod),
+      'playStationAmount': serializer.toJson<double>(playStationAmount),
+      'isClosedShift': serializer.toJson<bool>(isClosedShift),
+      'shiftClosingId': serializer.toJson<int?>(shiftClosingId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Invoice copyWith(
+          {int? id,
+          int? orderId,
+          String? invoiceNumber,
+          double? subtotal,
+          double? taxAmount,
+          double? serviceCharge,
+          double? grandTotal,
+          String? paymentMethod,
+          double? playStationAmount,
+          bool? isClosedShift,
+          Value<int?> shiftClosingId = const Value.absent(),
+          DateTime? createdAt}) =>
+      Invoice(
+        id: id ?? this.id,
+        orderId: orderId ?? this.orderId,
+        invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+        subtotal: subtotal ?? this.subtotal,
+        taxAmount: taxAmount ?? this.taxAmount,
+        serviceCharge: serviceCharge ?? this.serviceCharge,
+        grandTotal: grandTotal ?? this.grandTotal,
+        paymentMethod: paymentMethod ?? this.paymentMethod,
+        playStationAmount: playStationAmount ?? this.playStationAmount,
+        isClosedShift: isClosedShift ?? this.isClosedShift,
+        shiftClosingId:
+            shiftClosingId.present ? shiftClosingId.value : this.shiftClosingId,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  Invoice copyWithCompanion(InvoicesCompanion data) {
+    return Invoice(
+      id: data.id.present ? data.id.value : this.id,
+      orderId: data.orderId.present ? data.orderId.value : this.orderId,
+      invoiceNumber: data.invoiceNumber.present
+          ? data.invoiceNumber.value
+          : this.invoiceNumber,
+      subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
+      taxAmount: data.taxAmount.present ? data.taxAmount.value : this.taxAmount,
+      serviceCharge: data.serviceCharge.present
+          ? data.serviceCharge.value
+          : this.serviceCharge,
+      grandTotal:
+          data.grandTotal.present ? data.grandTotal.value : this.grandTotal,
+      paymentMethod: data.paymentMethod.present
+          ? data.paymentMethod.value
+          : this.paymentMethod,
+      playStationAmount: data.playStationAmount.present
+          ? data.playStationAmount.value
+          : this.playStationAmount,
+      isClosedShift: data.isClosedShift.present
+          ? data.isClosedShift.value
+          : this.isClosedShift,
+      shiftClosingId: data.shiftClosingId.present
+          ? data.shiftClosingId.value
+          : this.shiftClosingId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Invoice(')
+          ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
+          ..write('invoiceNumber: $invoiceNumber, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('serviceCharge: $serviceCharge, ')
+          ..write('grandTotal: $grandTotal, ')
+          ..write('paymentMethod: $paymentMethod, ')
+          ..write('playStationAmount: $playStationAmount, ')
+          ..write('isClosedShift: $isClosedShift, ')
+          ..write('shiftClosingId: $shiftClosingId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      orderId,
+      invoiceNumber,
+      subtotal,
+      taxAmount,
+      serviceCharge,
+      grandTotal,
+      paymentMethod,
+      playStationAmount,
+      isClosedShift,
+      shiftClosingId,
+      createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Invoice &&
+          other.id == this.id &&
+          other.orderId == this.orderId &&
+          other.invoiceNumber == this.invoiceNumber &&
+          other.subtotal == this.subtotal &&
+          other.taxAmount == this.taxAmount &&
+          other.serviceCharge == this.serviceCharge &&
+          other.grandTotal == this.grandTotal &&
+          other.paymentMethod == this.paymentMethod &&
+          other.playStationAmount == this.playStationAmount &&
+          other.isClosedShift == this.isClosedShift &&
+          other.shiftClosingId == this.shiftClosingId &&
+          other.createdAt == this.createdAt);
+}
+
+class InvoicesCompanion extends UpdateCompanion<Invoice> {
+  final Value<int> id;
+  final Value<int> orderId;
+  final Value<String> invoiceNumber;
+  final Value<double> subtotal;
+  final Value<double> taxAmount;
+  final Value<double> serviceCharge;
+  final Value<double> grandTotal;
+  final Value<String> paymentMethod;
+  final Value<double> playStationAmount;
+  final Value<bool> isClosedShift;
+  final Value<int?> shiftClosingId;
+  final Value<DateTime> createdAt;
+  const InvoicesCompanion({
+    this.id = const Value.absent(),
+    this.orderId = const Value.absent(),
+    this.invoiceNumber = const Value.absent(),
+    this.subtotal = const Value.absent(),
+    this.taxAmount = const Value.absent(),
+    this.serviceCharge = const Value.absent(),
+    this.grandTotal = const Value.absent(),
+    this.paymentMethod = const Value.absent(),
+    this.playStationAmount = const Value.absent(),
+    this.isClosedShift = const Value.absent(),
+    this.shiftClosingId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  InvoicesCompanion.insert({
+    this.id = const Value.absent(),
+    required int orderId,
+    required String invoiceNumber,
+    required double subtotal,
+    required double taxAmount,
+    required double serviceCharge,
+    required double grandTotal,
+    this.paymentMethod = const Value.absent(),
+    this.playStationAmount = const Value.absent(),
+    this.isClosedShift = const Value.absent(),
+    this.shiftClosingId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  })  : orderId = Value(orderId),
+        invoiceNumber = Value(invoiceNumber),
+        subtotal = Value(subtotal),
+        taxAmount = Value(taxAmount),
+        serviceCharge = Value(serviceCharge),
+        grandTotal = Value(grandTotal);
+  static Insertable<Invoice> custom({
+    Expression<int>? id,
+    Expression<int>? orderId,
+    Expression<String>? invoiceNumber,
+    Expression<double>? subtotal,
+    Expression<double>? taxAmount,
+    Expression<double>? serviceCharge,
+    Expression<double>? grandTotal,
+    Expression<String>? paymentMethod,
+    Expression<double>? playStationAmount,
+    Expression<bool>? isClosedShift,
+    Expression<int>? shiftClosingId,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (orderId != null) 'order_id': orderId,
+      if (invoiceNumber != null) 'invoice_number': invoiceNumber,
+      if (subtotal != null) 'subtotal': subtotal,
+      if (taxAmount != null) 'tax_amount': taxAmount,
+      if (serviceCharge != null) 'service_charge': serviceCharge,
+      if (grandTotal != null) 'grand_total': grandTotal,
+      if (paymentMethod != null) 'payment_method': paymentMethod,
+      if (playStationAmount != null) 'play_station_amount': playStationAmount,
+      if (isClosedShift != null) 'is_closed_shift': isClosedShift,
+      if (shiftClosingId != null) 'shift_closing_id': shiftClosingId,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  InvoicesCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? orderId,
+      Value<String>? invoiceNumber,
+      Value<double>? subtotal,
+      Value<double>? taxAmount,
+      Value<double>? serviceCharge,
+      Value<double>? grandTotal,
+      Value<String>? paymentMethod,
+      Value<double>? playStationAmount,
+      Value<bool>? isClosedShift,
+      Value<int?>? shiftClosingId,
+      Value<DateTime>? createdAt}) {
+    return InvoicesCompanion(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      subtotal: subtotal ?? this.subtotal,
+      taxAmount: taxAmount ?? this.taxAmount,
+      serviceCharge: serviceCharge ?? this.serviceCharge,
+      grandTotal: grandTotal ?? this.grandTotal,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      playStationAmount: playStationAmount ?? this.playStationAmount,
+      isClosedShift: isClosedShift ?? this.isClosedShift,
+      shiftClosingId: shiftClosingId ?? this.shiftClosingId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (orderId.present) {
+      map['order_id'] = Variable<int>(orderId.value);
+    }
+    if (invoiceNumber.present) {
+      map['invoice_number'] = Variable<String>(invoiceNumber.value);
+    }
+    if (subtotal.present) {
+      map['subtotal'] = Variable<double>(subtotal.value);
+    }
+    if (taxAmount.present) {
+      map['tax_amount'] = Variable<double>(taxAmount.value);
+    }
+    if (serviceCharge.present) {
+      map['service_charge'] = Variable<double>(serviceCharge.value);
+    }
+    if (grandTotal.present) {
+      map['grand_total'] = Variable<double>(grandTotal.value);
+    }
+    if (paymentMethod.present) {
+      map['payment_method'] = Variable<String>(paymentMethod.value);
+    }
+    if (playStationAmount.present) {
+      map['play_station_amount'] = Variable<double>(playStationAmount.value);
+    }
+    if (isClosedShift.present) {
+      map['is_closed_shift'] = Variable<bool>(isClosedShift.value);
+    }
+    if (shiftClosingId.present) {
+      map['shift_closing_id'] = Variable<int>(shiftClosingId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InvoicesCompanion(')
+          ..write('id: $id, ')
+          ..write('orderId: $orderId, ')
+          ..write('invoiceNumber: $invoiceNumber, ')
+          ..write('subtotal: $subtotal, ')
+          ..write('taxAmount: $taxAmount, ')
+          ..write('serviceCharge: $serviceCharge, ')
+          ..write('grandTotal: $grandTotal, ')
+          ..write('paymentMethod: $paymentMethod, ')
+          ..write('playStationAmount: $playStationAmount, ')
+          ..write('isClosedShift: $isClosedShift, ')
+          ..write('shiftClosingId: $shiftClosingId, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -5598,8 +5646,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProductsTable products = $ProductsTable(this);
   late final $OrdersTable orders = $OrdersTable(this);
   late final $OrderItemsTable orderItems = $OrderItemsTable(this);
-  late final $InvoicesTable invoices = $InvoicesTable(this);
   late final $DailyClosingsTable dailyClosings = $DailyClosingsTable(this);
+  late final $InvoicesTable invoices = $InvoicesTable(this);
   late final $WhatsAppQueueTable whatsAppQueue = $WhatsAppQueueTable(this);
   late final $PlayStationDevicesTable playStationDevices =
       $PlayStationDevicesTable(this);
@@ -5619,8 +5667,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         products,
         orders,
         orderItems,
-        invoices,
         dailyClosings,
+        invoices,
         whatsAppQueue,
         playStationDevices,
         playStationSessions,
@@ -7373,437 +7421,6 @@ typedef $$OrderItemsTableProcessedTableManager = ProcessedTableManager<
     (OrderItem, $$OrderItemsTableReferences),
     OrderItem,
     PrefetchHooks Function({bool orderId, bool productId})>;
-typedef $$InvoicesTableCreateCompanionBuilder = InvoicesCompanion Function({
-  Value<int> id,
-  required int orderId,
-  required String invoiceNumber,
-  required double subtotal,
-  required double taxAmount,
-  required double serviceCharge,
-  required double grandTotal,
-  Value<String> paymentMethod,
-  Value<double> playStationAmount,
-  Value<bool> isClosedShift,
-  Value<DateTime> createdAt,
-});
-typedef $$InvoicesTableUpdateCompanionBuilder = InvoicesCompanion Function({
-  Value<int> id,
-  Value<int> orderId,
-  Value<String> invoiceNumber,
-  Value<double> subtotal,
-  Value<double> taxAmount,
-  Value<double> serviceCharge,
-  Value<double> grandTotal,
-  Value<String> paymentMethod,
-  Value<double> playStationAmount,
-  Value<bool> isClosedShift,
-  Value<DateTime> createdAt,
-});
-
-final class $$InvoicesTableReferences
-    extends BaseReferences<_$AppDatabase, $InvoicesTable, Invoice> {
-  $$InvoicesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $OrdersTable _orderIdTable(_$AppDatabase db) => db.orders
-      .createAlias($_aliasNameGenerator(db.invoices.orderId, db.orders.id));
-
-  $$OrdersTableProcessedTableManager get orderId {
-    final $_column = $_itemColumn<int>('order_id')!;
-
-    final manager = $$OrdersTableTableManager($_db, $_db.orders)
-        .filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_orderIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static MultiTypedResultKey<$InvoiceItemsTable, List<InvoiceItem>>
-      _invoiceItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.invoiceItems,
-          aliasName:
-              $_aliasNameGenerator(db.invoices.id, db.invoiceItems.invoiceId));
-
-  $$InvoiceItemsTableProcessedTableManager get invoiceItemsRefs {
-    final manager = $$InvoiceItemsTableTableManager($_db, $_db.invoiceItems)
-        .filter((f) => f.invoiceId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_invoiceItemsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$InvoicesTableFilterComposer
-    extends Composer<_$AppDatabase, $InvoicesTable> {
-  $$InvoicesTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get invoiceNumber => $composableBuilder(
-      column: $table.invoiceNumber, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get subtotal => $composableBuilder(
-      column: $table.subtotal, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get taxAmount => $composableBuilder(
-      column: $table.taxAmount, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get serviceCharge => $composableBuilder(
-      column: $table.serviceCharge, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get grandTotal => $composableBuilder(
-      column: $table.grandTotal, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get paymentMethod => $composableBuilder(
-      column: $table.paymentMethod, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get playStationAmount => $composableBuilder(
-      column: $table.playStationAmount,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isClosedShift => $composableBuilder(
-      column: $table.isClosedShift, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  $$OrdersTableFilterComposer get orderId {
-    final $$OrdersTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.orderId,
-        referencedTable: $db.orders,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$OrdersTableFilterComposer(
-              $db: $db,
-              $table: $db.orders,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  Expression<bool> invoiceItemsRefs(
-      Expression<bool> Function($$InvoiceItemsTableFilterComposer f) f) {
-    final $$InvoiceItemsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.invoiceItems,
-        getReferencedColumn: (t) => t.invoiceId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$InvoiceItemsTableFilterComposer(
-              $db: $db,
-              $table: $db.invoiceItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$InvoicesTableOrderingComposer
-    extends Composer<_$AppDatabase, $InvoicesTable> {
-  $$InvoicesTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get invoiceNumber => $composableBuilder(
-      column: $table.invoiceNumber,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get subtotal => $composableBuilder(
-      column: $table.subtotal, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get taxAmount => $composableBuilder(
-      column: $table.taxAmount, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get serviceCharge => $composableBuilder(
-      column: $table.serviceCharge,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get grandTotal => $composableBuilder(
-      column: $table.grandTotal, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get paymentMethod => $composableBuilder(
-      column: $table.paymentMethod,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get playStationAmount => $composableBuilder(
-      column: $table.playStationAmount,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isClosedShift => $composableBuilder(
-      column: $table.isClosedShift,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  $$OrdersTableOrderingComposer get orderId {
-    final $$OrdersTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.orderId,
-        referencedTable: $db.orders,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$OrdersTableOrderingComposer(
-              $db: $db,
-              $table: $db.orders,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$InvoicesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $InvoicesTable> {
-  $$InvoicesTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get invoiceNumber => $composableBuilder(
-      column: $table.invoiceNumber, builder: (column) => column);
-
-  GeneratedColumn<double> get subtotal =>
-      $composableBuilder(column: $table.subtotal, builder: (column) => column);
-
-  GeneratedColumn<double> get taxAmount =>
-      $composableBuilder(column: $table.taxAmount, builder: (column) => column);
-
-  GeneratedColumn<double> get serviceCharge => $composableBuilder(
-      column: $table.serviceCharge, builder: (column) => column);
-
-  GeneratedColumn<double> get grandTotal => $composableBuilder(
-      column: $table.grandTotal, builder: (column) => column);
-
-  GeneratedColumn<String> get paymentMethod => $composableBuilder(
-      column: $table.paymentMethod, builder: (column) => column);
-
-  GeneratedColumn<double> get playStationAmount => $composableBuilder(
-      column: $table.playStationAmount, builder: (column) => column);
-
-  GeneratedColumn<bool> get isClosedShift => $composableBuilder(
-      column: $table.isClosedShift, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  $$OrdersTableAnnotationComposer get orderId {
-    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.orderId,
-        referencedTable: $db.orders,
-        getReferencedColumn: (t) => t.id,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$OrdersTableAnnotationComposer(
-              $db: $db,
-              $table: $db.orders,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  Expression<T> invoiceItemsRefs<T extends Object>(
-      Expression<T> Function($$InvoiceItemsTableAnnotationComposer a) f) {
-    final $$InvoiceItemsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.id,
-        referencedTable: $db.invoiceItems,
-        getReferencedColumn: (t) => t.invoiceId,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$InvoiceItemsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.invoiceItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$InvoicesTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $InvoicesTable,
-    Invoice,
-    $$InvoicesTableFilterComposer,
-    $$InvoicesTableOrderingComposer,
-    $$InvoicesTableAnnotationComposer,
-    $$InvoicesTableCreateCompanionBuilder,
-    $$InvoicesTableUpdateCompanionBuilder,
-    (Invoice, $$InvoicesTableReferences),
-    Invoice,
-    PrefetchHooks Function({bool orderId, bool invoiceItemsRefs})> {
-  $$InvoicesTableTableManager(_$AppDatabase db, $InvoicesTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$InvoicesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$InvoicesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$InvoicesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> orderId = const Value.absent(),
-            Value<String> invoiceNumber = const Value.absent(),
-            Value<double> subtotal = const Value.absent(),
-            Value<double> taxAmount = const Value.absent(),
-            Value<double> serviceCharge = const Value.absent(),
-            Value<double> grandTotal = const Value.absent(),
-            Value<String> paymentMethod = const Value.absent(),
-            Value<double> playStationAmount = const Value.absent(),
-            Value<bool> isClosedShift = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              InvoicesCompanion(
-            id: id,
-            orderId: orderId,
-            invoiceNumber: invoiceNumber,
-            subtotal: subtotal,
-            taxAmount: taxAmount,
-            serviceCharge: serviceCharge,
-            grandTotal: grandTotal,
-            paymentMethod: paymentMethod,
-            playStationAmount: playStationAmount,
-            isClosedShift: isClosedShift,
-            createdAt: createdAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int orderId,
-            required String invoiceNumber,
-            required double subtotal,
-            required double taxAmount,
-            required double serviceCharge,
-            required double grandTotal,
-            Value<String> paymentMethod = const Value.absent(),
-            Value<double> playStationAmount = const Value.absent(),
-            Value<bool> isClosedShift = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              InvoicesCompanion.insert(
-            id: id,
-            orderId: orderId,
-            invoiceNumber: invoiceNumber,
-            subtotal: subtotal,
-            taxAmount: taxAmount,
-            serviceCharge: serviceCharge,
-            grandTotal: grandTotal,
-            paymentMethod: paymentMethod,
-            playStationAmount: playStationAmount,
-            isClosedShift: isClosedShift,
-            createdAt: createdAt,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$InvoicesTableReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: ({orderId = false, invoiceItemsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (invoiceItemsRefs) db.invoiceItems],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (orderId) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.orderId,
-                    referencedTable:
-                        $$InvoicesTableReferences._orderIdTable(db),
-                    referencedColumn:
-                        $$InvoicesTableReferences._orderIdTable(db).id,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (invoiceItemsRefs)
-                    await $_getPrefetchedData<Invoice, $InvoicesTable,
-                            InvoiceItem>(
-                        currentTable: table,
-                        referencedTable: $$InvoicesTableReferences
-                            ._invoiceItemsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$InvoicesTableReferences(db, table, p0)
-                                .invoiceItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.invoiceId == item.id),
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$InvoicesTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $InvoicesTable,
-    Invoice,
-    $$InvoicesTableFilterComposer,
-    $$InvoicesTableOrderingComposer,
-    $$InvoicesTableAnnotationComposer,
-    $$InvoicesTableCreateCompanionBuilder,
-    $$InvoicesTableUpdateCompanionBuilder,
-    (Invoice, $$InvoicesTableReferences),
-    Invoice,
-    PrefetchHooks Function({bool orderId, bool invoiceItemsRefs})>;
 typedef $$DailyClosingsTableCreateCompanionBuilder = DailyClosingsCompanion
     Function({
   Value<int> id,
@@ -7853,6 +7470,21 @@ final class $$DailyClosingsTableReferences
     extends BaseReferences<_$AppDatabase, $DailyClosingsTable, DailyClosing> {
   $$DailyClosingsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$InvoicesTable, List<Invoice>> _invoicesRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.invoices,
+          aliasName: $_aliasNameGenerator(
+              db.dailyClosings.id, db.invoices.shiftClosingId));
+
+  $$InvoicesTableProcessedTableManager get invoicesRefs {
+    final manager = $$InvoicesTableTableManager($_db, $_db.invoices)
+        .filter((f) => f.shiftClosingId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_invoicesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 
   static MultiTypedResultKey<$ExpensesTable, List<Expense>> _expensesRefsTable(
           _$AppDatabase db) =>
@@ -7936,6 +7568,27 @@ class $$DailyClosingsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> invoicesRefs(
+      Expression<bool> Function($$InvoicesTableFilterComposer f) f) {
+    final $$InvoicesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.invoices,
+        getReferencedColumn: (t) => t.shiftClosingId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoicesTableFilterComposer(
+              $db: $db,
+              $table: $db.invoices,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 
   Expression<bool> expensesRefs(
       Expression<bool> Function($$ExpensesTableFilterComposer f) f) {
@@ -8097,6 +7750,27 @@ class $$DailyClosingsTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  Expression<T> invoicesRefs<T extends Object>(
+      Expression<T> Function($$InvoicesTableAnnotationComposer a) f) {
+    final $$InvoicesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.invoices,
+        getReferencedColumn: (t) => t.shiftClosingId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoicesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.invoices,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> expensesRefs<T extends Object>(
       Expression<T> Function($$ExpensesTableAnnotationComposer a) f) {
     final $$ExpensesTableAnnotationComposer composer = $composerBuilder(
@@ -8130,7 +7804,7 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
     $$DailyClosingsTableUpdateCompanionBuilder,
     (DailyClosing, $$DailyClosingsTableReferences),
     DailyClosing,
-    PrefetchHooks Function({bool expensesRefs})> {
+    PrefetchHooks Function({bool invoicesRefs, bool expensesRefs})> {
   $$DailyClosingsTableTableManager(_$AppDatabase db, $DailyClosingsTable table)
       : super(TableManagerState(
           db: db,
@@ -8231,13 +7905,30 @@ class $$DailyClosingsTableTableManager extends RootTableManager<
                     $$DailyClosingsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({expensesRefs = false}) {
+          prefetchHooksCallback: (
+              {invoicesRefs = false, expensesRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (expensesRefs) db.expenses],
+              explicitlyWatchedTables: [
+                if (invoicesRefs) db.invoices,
+                if (expensesRefs) db.expenses
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
+                  if (invoicesRefs)
+                    await $_getPrefetchedData<DailyClosing, $DailyClosingsTable,
+                            Invoice>(
+                        currentTable: table,
+                        referencedTable: $$DailyClosingsTableReferences
+                            ._invoicesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DailyClosingsTableReferences(db, table, p0)
+                                .invoicesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.shiftClosingId == item.id),
+                        typedResults: items),
                   if (expensesRefs)
                     await $_getPrefetchedData<DailyClosing, $DailyClosingsTable,
                             Expense>(
@@ -8269,7 +7960,534 @@ typedef $$DailyClosingsTableProcessedTableManager = ProcessedTableManager<
     $$DailyClosingsTableUpdateCompanionBuilder,
     (DailyClosing, $$DailyClosingsTableReferences),
     DailyClosing,
-    PrefetchHooks Function({bool expensesRefs})>;
+    PrefetchHooks Function({bool invoicesRefs, bool expensesRefs})>;
+typedef $$InvoicesTableCreateCompanionBuilder = InvoicesCompanion Function({
+  Value<int> id,
+  required int orderId,
+  required String invoiceNumber,
+  required double subtotal,
+  required double taxAmount,
+  required double serviceCharge,
+  required double grandTotal,
+  Value<String> paymentMethod,
+  Value<double> playStationAmount,
+  Value<bool> isClosedShift,
+  Value<int?> shiftClosingId,
+  Value<DateTime> createdAt,
+});
+typedef $$InvoicesTableUpdateCompanionBuilder = InvoicesCompanion Function({
+  Value<int> id,
+  Value<int> orderId,
+  Value<String> invoiceNumber,
+  Value<double> subtotal,
+  Value<double> taxAmount,
+  Value<double> serviceCharge,
+  Value<double> grandTotal,
+  Value<String> paymentMethod,
+  Value<double> playStationAmount,
+  Value<bool> isClosedShift,
+  Value<int?> shiftClosingId,
+  Value<DateTime> createdAt,
+});
+
+final class $$InvoicesTableReferences
+    extends BaseReferences<_$AppDatabase, $InvoicesTable, Invoice> {
+  $$InvoicesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OrdersTable _orderIdTable(_$AppDatabase db) => db.orders
+      .createAlias($_aliasNameGenerator(db.invoices.orderId, db.orders.id));
+
+  $$OrdersTableProcessedTableManager get orderId {
+    final $_column = $_itemColumn<int>('order_id')!;
+
+    final manager = $$OrdersTableTableManager($_db, $_db.orders)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_orderIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $DailyClosingsTable _shiftClosingIdTable(_$AppDatabase db) =>
+      db.dailyClosings.createAlias($_aliasNameGenerator(
+          db.invoices.shiftClosingId, db.dailyClosings.id));
+
+  $$DailyClosingsTableProcessedTableManager? get shiftClosingId {
+    final $_column = $_itemColumn<int>('shift_closing_id');
+    if ($_column == null) return null;
+    final manager = $$DailyClosingsTableTableManager($_db, $_db.dailyClosings)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_shiftClosingIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$InvoiceItemsTable, List<InvoiceItem>>
+      _invoiceItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.invoiceItems,
+          aliasName:
+              $_aliasNameGenerator(db.invoices.id, db.invoiceItems.invoiceId));
+
+  $$InvoiceItemsTableProcessedTableManager get invoiceItemsRefs {
+    final manager = $$InvoiceItemsTableTableManager($_db, $_db.invoiceItems)
+        .filter((f) => f.invoiceId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_invoiceItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$InvoicesTableFilterComposer
+    extends Composer<_$AppDatabase, $InvoicesTable> {
+  $$InvoicesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get invoiceNumber => $composableBuilder(
+      column: $table.invoiceNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get subtotal => $composableBuilder(
+      column: $table.subtotal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get taxAmount => $composableBuilder(
+      column: $table.taxAmount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get serviceCharge => $composableBuilder(
+      column: $table.serviceCharge, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get grandTotal => $composableBuilder(
+      column: $table.grandTotal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get paymentMethod => $composableBuilder(
+      column: $table.paymentMethod, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get playStationAmount => $composableBuilder(
+      column: $table.playStationAmount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isClosedShift => $composableBuilder(
+      column: $table.isClosedShift, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  $$OrdersTableFilterComposer get orderId {
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.orderId,
+        referencedTable: $db.orders,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.orders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$DailyClosingsTableFilterComposer get shiftClosingId {
+    final $$DailyClosingsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shiftClosingId,
+        referencedTable: $db.dailyClosings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DailyClosingsTableFilterComposer(
+              $db: $db,
+              $table: $db.dailyClosings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> invoiceItemsRefs(
+      Expression<bool> Function($$InvoiceItemsTableFilterComposer f) f) {
+    final $$InvoiceItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.invoiceItems,
+        getReferencedColumn: (t) => t.invoiceId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoiceItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.invoiceItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$InvoicesTableOrderingComposer
+    extends Composer<_$AppDatabase, $InvoicesTable> {
+  $$InvoicesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get invoiceNumber => $composableBuilder(
+      column: $table.invoiceNumber,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get subtotal => $composableBuilder(
+      column: $table.subtotal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get taxAmount => $composableBuilder(
+      column: $table.taxAmount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get serviceCharge => $composableBuilder(
+      column: $table.serviceCharge,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get grandTotal => $composableBuilder(
+      column: $table.grandTotal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get paymentMethod => $composableBuilder(
+      column: $table.paymentMethod,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get playStationAmount => $composableBuilder(
+      column: $table.playStationAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isClosedShift => $composableBuilder(
+      column: $table.isClosedShift,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  $$OrdersTableOrderingComposer get orderId {
+    final $$OrdersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.orderId,
+        referencedTable: $db.orders,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrdersTableOrderingComposer(
+              $db: $db,
+              $table: $db.orders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$DailyClosingsTableOrderingComposer get shiftClosingId {
+    final $$DailyClosingsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shiftClosingId,
+        referencedTable: $db.dailyClosings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DailyClosingsTableOrderingComposer(
+              $db: $db,
+              $table: $db.dailyClosings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$InvoicesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InvoicesTable> {
+  $$InvoicesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get invoiceNumber => $composableBuilder(
+      column: $table.invoiceNumber, builder: (column) => column);
+
+  GeneratedColumn<double> get subtotal =>
+      $composableBuilder(column: $table.subtotal, builder: (column) => column);
+
+  GeneratedColumn<double> get taxAmount =>
+      $composableBuilder(column: $table.taxAmount, builder: (column) => column);
+
+  GeneratedColumn<double> get serviceCharge => $composableBuilder(
+      column: $table.serviceCharge, builder: (column) => column);
+
+  GeneratedColumn<double> get grandTotal => $composableBuilder(
+      column: $table.grandTotal, builder: (column) => column);
+
+  GeneratedColumn<String> get paymentMethod => $composableBuilder(
+      column: $table.paymentMethod, builder: (column) => column);
+
+  GeneratedColumn<double> get playStationAmount => $composableBuilder(
+      column: $table.playStationAmount, builder: (column) => column);
+
+  GeneratedColumn<bool> get isClosedShift => $composableBuilder(
+      column: $table.isClosedShift, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$OrdersTableAnnotationComposer get orderId {
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.orderId,
+        referencedTable: $db.orders,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$DailyClosingsTableAnnotationComposer get shiftClosingId {
+    final $$DailyClosingsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.shiftClosingId,
+        referencedTable: $db.dailyClosings,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$DailyClosingsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.dailyClosings,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> invoiceItemsRefs<T extends Object>(
+      Expression<T> Function($$InvoiceItemsTableAnnotationComposer a) f) {
+    final $$InvoiceItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.invoiceItems,
+        getReferencedColumn: (t) => t.invoiceId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$InvoiceItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.invoiceItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$InvoicesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $InvoicesTable,
+    Invoice,
+    $$InvoicesTableFilterComposer,
+    $$InvoicesTableOrderingComposer,
+    $$InvoicesTableAnnotationComposer,
+    $$InvoicesTableCreateCompanionBuilder,
+    $$InvoicesTableUpdateCompanionBuilder,
+    (Invoice, $$InvoicesTableReferences),
+    Invoice,
+    PrefetchHooks Function(
+        {bool orderId, bool shiftClosingId, bool invoiceItemsRefs})> {
+  $$InvoicesTableTableManager(_$AppDatabase db, $InvoicesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InvoicesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InvoicesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InvoicesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> orderId = const Value.absent(),
+            Value<String> invoiceNumber = const Value.absent(),
+            Value<double> subtotal = const Value.absent(),
+            Value<double> taxAmount = const Value.absent(),
+            Value<double> serviceCharge = const Value.absent(),
+            Value<double> grandTotal = const Value.absent(),
+            Value<String> paymentMethod = const Value.absent(),
+            Value<double> playStationAmount = const Value.absent(),
+            Value<bool> isClosedShift = const Value.absent(),
+            Value<int?> shiftClosingId = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              InvoicesCompanion(
+            id: id,
+            orderId: orderId,
+            invoiceNumber: invoiceNumber,
+            subtotal: subtotal,
+            taxAmount: taxAmount,
+            serviceCharge: serviceCharge,
+            grandTotal: grandTotal,
+            paymentMethod: paymentMethod,
+            playStationAmount: playStationAmount,
+            isClosedShift: isClosedShift,
+            shiftClosingId: shiftClosingId,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int orderId,
+            required String invoiceNumber,
+            required double subtotal,
+            required double taxAmount,
+            required double serviceCharge,
+            required double grandTotal,
+            Value<String> paymentMethod = const Value.absent(),
+            Value<double> playStationAmount = const Value.absent(),
+            Value<bool> isClosedShift = const Value.absent(),
+            Value<int?> shiftClosingId = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+          }) =>
+              InvoicesCompanion.insert(
+            id: id,
+            orderId: orderId,
+            invoiceNumber: invoiceNumber,
+            subtotal: subtotal,
+            taxAmount: taxAmount,
+            serviceCharge: serviceCharge,
+            grandTotal: grandTotal,
+            paymentMethod: paymentMethod,
+            playStationAmount: playStationAmount,
+            isClosedShift: isClosedShift,
+            shiftClosingId: shiftClosingId,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$InvoicesTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: (
+              {orderId = false,
+              shiftClosingId = false,
+              invoiceItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (invoiceItemsRefs) db.invoiceItems],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (orderId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.orderId,
+                    referencedTable:
+                        $$InvoicesTableReferences._orderIdTable(db),
+                    referencedColumn:
+                        $$InvoicesTableReferences._orderIdTable(db).id,
+                  ) as T;
+                }
+                if (shiftClosingId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.shiftClosingId,
+                    referencedTable:
+                        $$InvoicesTableReferences._shiftClosingIdTable(db),
+                    referencedColumn:
+                        $$InvoicesTableReferences._shiftClosingIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (invoiceItemsRefs)
+                    await $_getPrefetchedData<Invoice, $InvoicesTable,
+                            InvoiceItem>(
+                        currentTable: table,
+                        referencedTable: $$InvoicesTableReferences
+                            ._invoiceItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$InvoicesTableReferences(db, table, p0)
+                                .invoiceItemsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.invoiceId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$InvoicesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $InvoicesTable,
+    Invoice,
+    $$InvoicesTableFilterComposer,
+    $$InvoicesTableOrderingComposer,
+    $$InvoicesTableAnnotationComposer,
+    $$InvoicesTableCreateCompanionBuilder,
+    $$InvoicesTableUpdateCompanionBuilder,
+    (Invoice, $$InvoicesTableReferences),
+    Invoice,
+    PrefetchHooks Function(
+        {bool orderId, bool shiftClosingId, bool invoiceItemsRefs})>;
 typedef $$WhatsAppQueueTableCreateCompanionBuilder = WhatsAppQueueCompanion
     Function({
   Value<int> id,
@@ -10172,10 +10390,10 @@ class $AppDatabaseManager {
       $$OrdersTableTableManager(_db, _db.orders);
   $$OrderItemsTableTableManager get orderItems =>
       $$OrderItemsTableTableManager(_db, _db.orderItems);
-  $$InvoicesTableTableManager get invoices =>
-      $$InvoicesTableTableManager(_db, _db.invoices);
   $$DailyClosingsTableTableManager get dailyClosings =>
       $$DailyClosingsTableTableManager(_db, _db.dailyClosings);
+  $$InvoicesTableTableManager get invoices =>
+      $$InvoicesTableTableManager(_db, _db.invoices);
   $$WhatsAppQueueTableTableManager get whatsAppQueue =>
       $$WhatsAppQueueTableTableManager(_db, _db.whatsAppQueue);
   $$PlayStationDevicesTableTableManager get playStationDevices =>

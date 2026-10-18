@@ -494,11 +494,12 @@ class PrinterService {
               _buildHeader(
                 baseFont: baseFont,
                 boldFont: boldFont,
-                badgeTitle: 'تقرير تقفيل الوردية',
+                badgeTitle: report.isOpenShift ? 'تقرير كاشير الوردية الحالية' : 'تقرير كاشير وردية (${report.shiftTime ?? ''})',
                 subtitleBadge: '${report.invoiceCount} فاتورة مسجلة',
               ),
               pw.SizedBox(height: 2),
 
+              _infoRow('الوردية:', report.isOpenShift ? 'الوردية المفتوحة (حالية)' : 'وردية رقم #${report.shiftClosingId ?? ''} (${report.shiftTime ?? ''})', baseFont),
               _infoRow('تاريخ الوردية:', _formatDate(report.date), baseFont),
               _infoRow('وقت التقرير:', _formatTime(now), baseFont),
               _infoRow('إجمالي القطع المباعة:', '${report.totalQuantitySold} قطعة', baseFont, isBold: true, boldFont: boldFont),

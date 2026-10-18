@@ -51,6 +51,15 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
   }
 
   @override
+  Future<List<DailyClosingEntity>> getClosingsForDate(String dateStr) async {
+    final rows = await (db.select(db.dailyClosings)
+          ..where((d) => d.closingDate.equals(dateStr))
+          ..orderBy([(d) => OrderingTerm.asc(d.createdAt)]))
+        .get();
+    return rows.map(_toEntity).toList();
+  }
+
+  @override
   Future<DailyClosingEntity> performDailyClosing({
     required String recipientPhone,
     required bool enqueueWhatsApp,
@@ -148,10 +157,13 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
             ),
           );
 
-      // 4. Mark all open shift invoices as closed
+      // 4. Mark all open shift invoices as closed and link to this closing
       await (db.update(db.invoices)
             ..where((inv) => inv.isClosedShift.equals(false)))
-          .write(const InvoicesCompanion(isClosedShift: Value(true)));
+          .write(InvoicesCompanion(
+            isClosedShift: const Value(true),
+            shiftClosingId: Value(closingId),
+          ));
 
       // 5. Mark all open shift expenses as closed and link to this closing
       await (db.update(db.expenses)
@@ -277,6 +289,43 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
               inv.createdAt.isSmallerOrEqualValue(endOfDay))
           ..orderBy([(inv) => OrderingTerm.desc(inv.createdAt)]))
         .get();
+
+    final result = <InvoiceDetailEntity>[];
+    for (final inv in invoices) {
+      final items = await _fetchInvoiceItems(inv.id, inv.orderId);
+      result.add(InvoiceDetailEntity(
+        id: inv.id,
+        orderId: inv.orderId,
+        invoiceNumber: inv.invoiceNumber,
+        subtotal: inv.subtotal,
+        taxAmount: inv.taxAmount,
+        serviceCharge: inv.serviceCharge,
+        grandTotal: inv.grandTotal,
+        paymentMethod: inv.paymentMethod,
+        playStationAmount: inv.playStationAmount,
+        isClosedShift: inv.isClosedShift,
+        createdAt: inv.createdAt,
+        items: items,
+      ));
+    }
+
+    return result;
+  }
+
+  @override
+  Future<List<InvoiceDetailEntity>> getInvoicesForShift(int shiftClosingId) async {
+    var invoices = await (db.select(db.invoices)
+          ..where((inv) => inv.shiftClosingId.equals(shiftClosingId))
+          ..orderBy([(inv) => OrderingTerm.desc(inv.createdAt)]))
+        .get();
+
+    // Graceful fallback for legacy records before migration v9
+    if (invoices.isEmpty) {
+      final closing = await getClosingById(shiftClosingId);
+      if (closing != null) {
+        return getInvoicesForClosingDate(closing.closingDate);
+      }
+    }
 
     final result = <InvoiceDetailEntity>[];
     for (final inv in invoices) {

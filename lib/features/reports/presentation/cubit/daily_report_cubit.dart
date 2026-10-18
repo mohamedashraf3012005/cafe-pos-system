@@ -82,6 +82,14 @@ class DailyReportCubit extends Cubit<DailyReportState> {
     }
   }
 
-  Future<CashierReportEntity> getCashierReport({DateTime? date, String? dateStr}) =>
-      repository.getCashierReport(date: date, dateStr: dateStr);
+  Future<CashierReportEntity> getCashierReport({
+    int? shiftClosingId,
+    DateTime? date,
+    String? dateStr,
+  }) =>
+      repository.getCashierReport(
+        shiftClosingId: shiftClosingId,
+        date: date,
+        dateStr: dateStr,
+      );
 }
