@@ -123,7 +123,7 @@ class _DailyReportViewState extends State<_DailyReportView> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'أدخل قيمة المصروف وسبب الصرف، وسيتم خصمها من نقدية الدرج وحفظها في تقرير الوردية.',
+                      'أدخل قيمة المصروف وسبب الصرف، وسيتم حفظها وتسجيلها في تقرير الوردية.',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     ),
                     const SizedBox(height: 16),
@@ -548,8 +548,6 @@ class _DailyReportViewState extends State<_DailyReportView> {
                 }
               }
 
-              final netCashInDrawer = cashTotal - state.totalExpenses;
-
               return Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -565,81 +563,24 @@ class _DailyReportViewState extends State<_DailyReportView> {
                       ),
                       child: Column(
                         children: [
-                          if (state.totalExpenses > 0) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        '💰 صافي الإيراد (بعد المصروفات)',
-                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '${state.netRevenue.toStringAsFixed(2)} ج.م',
-                                        style: const TextStyle(
-                                          color: AppColors.secondary,
-                                          fontSize: 34,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'المبيعات: ${state.totalRevenue.toStringAsFixed(2)} - المصروفات: ${state.totalExpenses.toStringAsFixed(2)}',
-                                        style: const TextStyle(color: Colors.white38, fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(width: 1, height: 75, color: Colors.white12),
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        '💵 صافي النقدية بالدرج',
-                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 15, fontWeight: FontWeight.bold),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '${netCashInDrawer.toStringAsFixed(2)} ج.م',
-                                        style: const TextStyle(
-                                          color: AppColors.tableFree,
-                                          fontSize: 34,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'كاش المبيعات: ${cashTotal.toStringAsFixed(2)} - المصروفات: ${state.totalExpenses.toStringAsFixed(2)}',
-                                        style: const TextStyle(color: Colors.white38, fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                          const Text(
+                            'إجمالي المبيعات',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${state.totalRevenue.toStringAsFixed(2)} ج.م',
+                            style: const TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 40,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ] else ...[
-                            const Text(
-                              'مجموع إيرادات مبيعات الوردية الحالية',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${state.totalRevenue.toStringAsFixed(2)} ج.م',
-                              style: const TextStyle(
-                                color: AppColors.secondary,
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              '${state.invoices.length} فاتورة مسجلة بهذه الوردية',
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                            ),
-                          ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${state.invoices.length} فاتورة مسجلة بهذه الوردية',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          ),
                           const SizedBox(height: 14),
                           const Divider(color: Colors.white12, height: 1),
                           const SizedBox(height: 12),
@@ -647,15 +588,13 @@ class _DailyReportViewState extends State<_DailyReportView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _buildPaymentSummaryItem('💵 نقدي (Cash)', cashTotal, AppColors.tableFree),
+                              _buildPaymentSummaryItem('💵 فلوس نقدي', cashTotal, AppColors.tableFree),
                               Container(width: 1, height: 30, color: Colors.white12),
-                              _buildPaymentSummaryItem('📱 محفظة (Wallet)', walletTotal, Colors.deepPurpleAccent),
+                              _buildPaymentSummaryItem('📱 فلوس محفظة', walletTotal, Colors.deepPurpleAccent),
                               Container(width: 1, height: 30, color: Colors.white12),
-                              _buildPaymentSummaryItem('⚡ إنستاباي (InstaPay)', instapayTotal, Colors.amber),
-                              if (state.totalExpenses > 0) ...[
-                                Container(width: 1, height: 30, color: Colors.white12),
-                                _buildPaymentSummaryItem('💸 إجمالي المصروفات', state.totalExpenses, Colors.redAccent, isNegative: true),
-                              ],
+                              _buildPaymentSummaryItem('⚡ فلوس إنستا', instapayTotal, Colors.amber),
+                              Container(width: 1, height: 30, color: Colors.white12),
+                              _buildPaymentSummaryItem('💸 فلوس مصروف', state.totalExpenses, Colors.redAccent),
                             ],
                           ),
                         ],

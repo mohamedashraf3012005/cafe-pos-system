@@ -50,11 +50,10 @@ class _CashierReportDialogContentState extends State<_CashierReportDialogContent
     final expBuf = StringBuffer();
     if (r.expenses.isNotEmpty) {
       expBuf.writeln('────────────────');
-      expBuf.writeln('<b>💸 مصروفات الوردية:</b> -${r.expensesTotal.toStringAsFixed(2)} ج.م');
+      expBuf.writeln('<b>💸 مصروفات الوردية:</b> ${r.expensesTotal.toStringAsFixed(2)} ج.م');
       for (final exp in r.expenses) {
         expBuf.writeln('• ${exp.reason}: ${exp.amount.toStringAsFixed(2)} ج.م');
       }
-      expBuf.writeln('💵 <b>صافي النقدية بالدرج:</b> <u>${r.netCashAfterExpenses.toStringAsFixed(2)} ج.م</u>');
     }
 
     return '''
@@ -294,23 +293,12 @@ ${r.playStationTotal > 0 ? '\n🎮 <b>جلسات بلايستيشن:</b> ${r.pla
                       _buildPaymentBreakdownItem('📱 محفظة (Wallet)', report.walletTotal, Colors.deepPurpleAccent),
                       Container(width: 1, height: 26, color: Colors.white12),
                       _buildPaymentBreakdownItem('⚡ إنستاباي (InstaPay)', report.instapayTotal, Colors.amber),
+                      if (report.expensesTotal > 0) ...[
+                        Container(width: 1, height: 26, color: Colors.white12),
+                        _buildPaymentBreakdownItem('💸 المصروفات', report.expensesTotal, Colors.redAccent),
+                      ],
                     ],
                   ),
-                  if (report.expensesTotal > 0) ...[
-                    const SizedBox(height: 10),
-                    const Divider(color: Colors.white12, height: 1),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildPaymentBreakdownItem('💸 مصروفات الوردية', report.expensesTotal, Colors.redAccent),
-                        Container(width: 1, height: 26, color: Colors.white12),
-                        _buildPaymentBreakdownItem('💵 صافي النقدية بالدرج', report.netCashAfterExpenses, AppColors.tableFree),
-                        Container(width: 1, height: 26, color: Colors.white12),
-                        _buildPaymentBreakdownItem('💰 صافي الإيراد', report.netRevenueAfterExpenses, AppColors.secondary),
-                      ],
-                    ),
-                  ],
                 ],
               ),
             ),

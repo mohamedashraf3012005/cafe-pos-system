@@ -459,7 +459,6 @@ class DailyClosingRepositoryImpl implements DailyClosingRepository {
     }
 
     buffer.writeln('────────────────');
-    buffer.writeln('💰 <b>صافي النقدية بالدرج:</b> <u>${c.netCashAfterExpenses.toStringAsFixed(2)} ج.م</u>');
     buffer.writeln('<b>حالة الوردية:</b> تم تقفيل الوردية بنجاح ✅');
 
     return buffer.toString();

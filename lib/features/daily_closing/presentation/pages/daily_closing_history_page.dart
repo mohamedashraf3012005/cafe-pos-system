@@ -100,9 +100,7 @@ class _DailyClosingHistoryView extends StatelessWidget {
                   _buildDetailRow('🔹 طرق أخرى', '${closing.otherPayments.toStringAsFixed(2)} ج.م'),
                 if (closing.expensesTotal > 0) ...[
                   const Divider(color: Colors.white24, height: 24),
-                  _buildDetailRow('💸 إجمالي المصروفات', '-${closing.expensesTotal.toStringAsFixed(2)} ج.م', color: Colors.redAccent, isBold: true),
-                  _buildDetailRow('💵 صافي النقدية بالدرج', '${closing.netCashAfterExpenses.toStringAsFixed(2)} ج.م', color: AppColors.tableFree, isBold: true),
-                  _buildDetailRow('💰 صافي الإيراد بعد المصروفات', '${closing.netRevenueAfterExpenses.toStringAsFixed(2)} ج.م', color: AppColors.secondary, isBold: true),
+                  _buildDetailRow('💸 إجمالي المصروفات', '${closing.expensesTotal.toStringAsFixed(2)} ج.م', color: Colors.redAccent, isBold: true),
                 ],
                 const Divider(color: Colors.white24, height: 24),
                 _buildDetailRow('حالة الوردية', 'مغلقة (Closed)', color: AppColors.tableFree),
@@ -419,13 +417,8 @@ class _DailyClosingHistoryView extends StatelessWidget {
                           if (closing.expensesTotal > 0) ...[
                             const SizedBox(width: 12),
                             Text(
-                              'المصروفات: -${closing.expensesTotal.toStringAsFixed(2)} ج.م',
+                              'المصروفات: ${closing.expensesTotal.toStringAsFixed(2)} ج.م',
                               style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'الدرج: ${closing.netCashAfterExpenses.toStringAsFixed(2)} ج.م',
-                              style: const TextStyle(color: AppColors.tableFree, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                           ],
                           const Spacer(),

@@ -547,24 +547,6 @@ class PrinterService {
 
               pw.SizedBox(height: 2),
               _grandTotalBox('إجمالي مبيعات الوردية', report.totalRevenue, boldFont),
-              if (report.expensesTotal > 0) ...[
-                pw.SizedBox(height: 1.5),
-                pw.Container(
-                  padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 2.5),
-                  decoration: pw.BoxDecoration(
-                    color: PdfColors.grey200,
-                    border: pw.Border.all(color: PdfColors.black, width: 0.8),
-                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
-                  ),
-                  child: pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text('صافي النقدية بالدرج:', style: pw.TextStyle(font: boldFont, fontSize: 7.5)),
-                      pw.Text('${report.netCashAfterExpenses.toStringAsFixed(2)} ج.م', style: pw.TextStyle(font: boldFont, fontSize: 8.5)),
-                    ],
-                  ),
-                ),
-              ],
               pw.SizedBox(height: 2),
 
               // Sold Items Breakdown
